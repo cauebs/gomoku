@@ -1,0 +1,8 @@
+[package]
+name = "connect-four"
+version = "0.1.0"
+authors = ["Cauê Baasch de Souza <cauebs@pm.me>",
+           "João Paulo Taylor Ienczak Zanette <jpaulotiz@gmail.com>"]
+
+[dependencies]
+rand = "0.5.5"
