@@ -3,9 +3,9 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use players::PlayerIndicator;
+use game::PlayerIndicator;
 
-type BoardArray = [[Option<PlayerIndicator>; 7]; 6];
+type BoardArray = [[Option<PlayerIndicator>; 15]; 15];
 
 #[derive(Debug, Default)]
 pub struct Board(BoardArray);
@@ -25,15 +25,17 @@ impl DerefMut for Board {
 
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, " _ _ _ _ _ _ _")?;
+        use game::PlayerIndicator::*;
 
-        for row in self.iter() {
-            write!(f, "|")?;
+        writeln!(f, "  {}", " _".repeat(self[0].len()))?;
+
+        for (i, row) in self.iter().enumerate() {
+            write!(f, "{:X} |", i)?;
 
             for cell in row {
                 let mark = match cell {
-                    Some(PlayerIndicator::P1) => "1",
-                    Some(PlayerIndicator::P2) => "2",
+                    Some(Human) => "H",
+                    Some(Bot) => "B",
                     None => "_",
                 };
                 write!(f, "{}|", mark)?;
@@ -42,7 +44,12 @@ impl fmt::Display for Board {
             writeln!(f)?;
         }
 
-        writeln!(f, " 0 1 2 3 4 5 6")?;
+        write!(f, "  ")?;
+        for (j, _column) in self[0].iter().enumerate() {
+            write!(f, " {:X}", j)?;
+        }
+        writeln!(f)?;
+
         Ok(())
     }
 }

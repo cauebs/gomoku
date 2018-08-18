@@ -1,78 +1,100 @@
+use failure;
+
 use board::Board;
-use players::{Player, PlayerIndicator};
+use coordinates::Coordinates;
+use players::Player;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PlayerIndicator {
+    Human,
+    Bot,
+}
 
 pub enum EndGame {
     Victory(PlayerIndicator),
     Draw,
 }
 
+#[derive(Fail, Debug)]
 enum Error {
-    ColumnOverflow,
-    ColumnOutOfBounds,
+    #[fail(display = "Cell is already occupied.")]
+    OccupiedCell,
+    #[fail(display = "Coordinates out of bounds.")]
+    CoordinatesOutOfBounds,
 }
 
 #[derive(Debug)]
-pub struct Game<P1: Player, P2: Player> {
+pub struct Game<H: Player, B: Player> {
     board: Board,
-    player1: P1,
-    player2: P2,
-    current_turn: PlayerIndicator,
+    human: H,
+    bot: B,
+    current_turn: Option<PlayerIndicator>,
+    turns: u32,
 }
 
-impl<P1: Player, P2: Player> Game<P1, P2> {
-    pub fn new(player1: P1, player2: P2) -> Self {
+impl<H: Player, B: Player> Game<H, B> {
+    pub fn new(human: H, bot: B) -> Self {
         Self {
-            player1,
-            player2,
             board: Default::default(),
-            current_turn: PlayerIndicator::P1,
+            human,
+            bot,
+            current_turn: None,
+            turns: 0,
         }
     }
 
-    pub fn play(&mut self) -> EndGame {
+    pub fn play(&mut self, first: PlayerIndicator) -> EndGame {
+        use self::PlayerIndicator::{Bot, Human};
+
+        self.current_turn = Some(first);
+
         loop {
-            let (column, next_turn) = match self.current_turn {
-                PlayerIndicator::P1 => (self.player1.decide(&self.board), PlayerIndicator::P2),
-                PlayerIndicator::P2 => (self.player2.decide(&self.board), PlayerIndicator::P1),
+            let (coords, next_turn) = match self.current_turn.unwrap() {
+                Human => (self.human.decide(&self.board), Bot),
+                Bot => (self.bot.decide(&self.board), Human),
             };
 
-            if self.make_move(column).is_err() {
-                println!("Jogada inválida.\n");
+            if let Err(e) = self.make_move(&coords) {
+                println!("Invalid move: {}\n", e);
                 continue;
             }
 
             println!("\n{}", self.board);
 
-            if let Some(end_game) = self.has_ended() {
-                return end_game;
+            if let Some(end) = self.check_end() {
+                return end;
             }
 
-            self.current_turn = next_turn;
+            self.current_turn = Some(next_turn);
         }
     }
 
-    fn make_move(&mut self, column: usize) -> Result<(), Error> {
-        if column >= 7 {
-            return Err(Error::ColumnOutOfBounds);
+    fn make_move(&mut self, coords: &Coordinates) -> Result<(), failure::Error> {
+        if coords.0 >= 15 || coords.1 >= 15 {
+            Err(Error::CoordinatesOutOfBounds)?;
         }
 
-        let first_filled_row = self
-            .board
-            .iter()
-            .map(|row| &row[column])
-            .position(|cell| cell.is_some());
+        let cell = &mut self.board[coords.0][coords.1];
 
-        match first_filled_row {
-            Some(0) => return Err(Error::ColumnOverflow),
-            Some(n) => self.board[n - 1][column] = Some(self.current_turn),
-            None => self.board[5][column] = Some(self.current_turn),
+        if cell.is_some() {
+            Err(Error::OccupiedCell)?;
         }
+
+        *cell = self.current_turn;
 
         Ok(())
     }
 
-    fn has_ended(&self) -> Option<EndGame> {
-        // TODO: detect victory states
+    fn check_end(&self) -> Option<EndGame> {
+        // TODO: detect diagonal victories
+
+        if let Some(end) = self.check_for_horizontal_victory() {
+            return Some(end);
+        }
+
+        if let Some(end) = self.check_for_vertical_victory() {
+            return Some(end);
+        }
 
         if self
             .board
@@ -83,5 +105,49 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         } else {
             None
         }
+    }
+
+    fn check_for_horizontal_victory(&self) -> Option<EndGame> {
+        let (mut tracking, mut streak) = (None, 0);
+
+        for row in self.board.iter() {
+            for &cell in row.iter() {
+                streak = match (cell, tracking) {
+                    (Some(c), Some(t)) if c == t => streak + 1,
+                    (Some(_), _) => 1,
+                    (None, _) => 0,
+                };
+
+                if streak >= 5 {
+                    return tracking.map(EndGame::Victory);
+                }
+
+                tracking = cell;
+            }
+        }
+
+        None
+    }
+
+    fn check_for_vertical_victory(&self) -> Option<EndGame> {
+        let (mut tracking, mut streak) = (None, 0);
+
+        for j in 0..self.board[0].len() {
+            for &cell in (0..self.board.len()).map(|i| &self.board[i][j]) {
+                streak = match (cell, tracking) {
+                    (Some(c), Some(t)) if c == t => streak + 1,
+                    (Some(_), _) => 1,
+                    (None, _) => 0,
+                };
+
+                if streak >= 5 {
+                    return tracking.map(EndGame::Victory);
+                }
+
+                tracking = cell;
+            }
+        }
+
+        None
     }
 }

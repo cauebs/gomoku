@@ -1,8 +1,10 @@
 [package]
-name = "connect-four"
+name = "gomoku"
 version = "0.1.0"
 authors = ["Cauê Baasch de Souza <cauebs@pm.me>",
            "João Paulo Taylor Ienczak Zanette <jpaulotiz@gmail.com>"]
 
 [dependencies]
 rand = "0.5.5"
+failure = "0.1.2"
+failure_derive = "0.1.2"
