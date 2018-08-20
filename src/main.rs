@@ -8,7 +8,7 @@ mod coordinates;
 mod game;
 mod players;
 
-use game::{Game, PlayerIndicator, EndGame::*};
+use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Human, RandomBot};
 
 fn main() {

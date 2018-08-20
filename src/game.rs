@@ -165,11 +165,10 @@ impl<H: Player, B: Player> Game<H, B> {
             for i in 0..width + 1 - VICTORY_STREAK {
                 for dir in [-1, 1].iter() {
                     let (mut tracking, mut streak) = (None, 0);
-                    for &cell in (0..VICTORY_STREAK)
-                                 .map(|d| match dir {
-                                     x if *x < 0 => &self.board[i + d][VICTORY_STREAK - 1 + j - d],
-                                     _ => &self.board[i + d][j + d],
-                                 }) {
+                    for &cell in (0..VICTORY_STREAK).map(|d| match dir {
+                        x if *x < 0 => &self.board[i + d][VICTORY_STREAK - 1 + j - d],
+                        _ => &self.board[i + d][j + d],
+                    }) {
                         streak = match (cell, tracking) {
                             (Some(c), Some(t)) if c == t => streak + 1,
                             (Some(_), _) => 1,
