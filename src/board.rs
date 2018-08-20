@@ -10,6 +10,16 @@ type BoardArray = [[Option<PlayerIndicator>; 15]; 15];
 #[derive(Debug, Default)]
 pub struct Board(BoardArray);
 
+impl Board {
+    pub fn width(&self) -> usize {
+        self[0].len()
+    }
+
+    pub fn height(&self) -> usize {
+        self.len()
+    }
+}
+
 impl Deref for Board {
     type Target = BoardArray;
     fn deref(&self) -> &Self::Target {
