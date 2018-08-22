@@ -90,8 +90,6 @@ impl<H: Player, B: Player> Game<H, B> {
     }
 
     fn check_end(&self) -> Option<EndGame> {
-        // TODO: detect diagonal victories
-
         if let Some(end) = self.check_for_horizontal_victory() {
             return Some(end);
         }
@@ -116,9 +114,9 @@ impl<H: Player, B: Player> Game<H, B> {
     }
 
     fn check_for_horizontal_victory(&self) -> Option<EndGame> {
-        let (mut tracking, mut streak) = (None, 0);
-
         for row in self.board.iter() {
+            let (mut tracking, mut streak) = (None, 0);
+
             for &cell in row.iter() {
                 streak = match (cell, tracking) {
                     (Some(c), Some(t)) if c == t => streak + 1,
@@ -132,16 +130,18 @@ impl<H: Player, B: Player> Game<H, B> {
 
                 tracking = cell;
             }
-            tracking = None;
         }
 
         None
     }
 
     fn check_for_vertical_victory(&self) -> Option<EndGame> {
-        for j in 0..self.board.width() {
+        for x in 0..self.board.width() {
             let (mut tracking, mut streak) = (None, 0);
-            for &cell in (0..self.board.height()).map(|i| &self.board[i][j]) {
+
+            for y in 0..self.board.height() {
+                let cell = self.board[y][x];
+
                 streak = match (cell, tracking) {
                     (Some(c), Some(t)) if c == t => streak + 1,
                     (Some(_), _) => 1,
@@ -159,29 +159,17 @@ impl<H: Player, B: Player> Game<H, B> {
         None
     }
 
-    fn diagonal_cell_search(&self,
-                            (i, j): (usize, usize),
-                            reverse: bool) -> Option<EndGame> {
-        let tracking = match self.board[j][i] {
-            Some(x) => x,
-            None => return None,
-        };
-
+    fn diagonal_cell_search(&self, mut x: usize, mut y: usize, reverse: bool) -> Option<EndGame> {
+        let tracking = self.board[y][x]?;
         let mut streak = 1;
-        let mut x = i;
-        let mut y = j;
 
         let d: i32 = if reverse { -1 } else { 1 };
 
-        for _ in 1..VICTORY_STREAK {
+        for _ in 0..VICTORY_STREAK - 1 {
             x = (x as i32 + d) as usize;
             y += 1;
-            let &cell = match &self.board[y][x] {
-                Some(x) => x,
-                None => return None,
-            };
 
-            if cell == tracking {
+            if self.board[y][x]? == tracking {
                 streak += 1;
             }
         }
@@ -197,18 +185,16 @@ impl<H: Player, B: Player> Game<H, B> {
         let height = self.board.height();
         let width = self.board.width();
 
-        for j in 0..height + 1 - VICTORY_STREAK {
-            for i in 0..width {
-                if i <= width - VICTORY_STREAK {
-                    match self.diagonal_cell_search((i, j), false) {
-                        None => (),
-                        Some(x) => return Some(x),
+        for x in 0..height + 1 - VICTORY_STREAK {
+            for y in 0..width {
+                if y <= width - VICTORY_STREAK {
+                    if let Some(end) = self.diagonal_cell_search(x, y, false) {
+                        return Some(end);
                     }
                 }
-                if i >= VICTORY_STREAK - 1 {
-                    match self.diagonal_cell_search((i, j), true) {
-                        None => (),
-                        Some(x) => return Some(x),
+                if y >= VICTORY_STREAK - 1 {
+                    if let Some(end) = self.diagonal_cell_search(x, y, true) {
+                        return Some(end);
                     }
                 }
             }
