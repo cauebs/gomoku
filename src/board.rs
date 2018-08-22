@@ -44,9 +44,9 @@ impl fmt::Display for Board {
 
             for cell in row {
                 let mark = match cell {
-                    Some(Human) => "H",
-                    Some(Bot) => "B",
-                    None => "_",
+                    Some(Player1) => '1',
+                    Some(Player2) => '2',
+                    None => '_',
                 };
                 write!(f, "{}|", mark)?;
             }

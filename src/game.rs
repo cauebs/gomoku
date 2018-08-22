@@ -8,8 +8,8 @@ const VICTORY_STREAK: usize = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PlayerIndicator {
-    Human,
-    Bot,
+    Player1,
+    Player2,
 }
 
 type Cell = Option<PlayerIndicator>;
@@ -28,34 +28,34 @@ enum Error {
 }
 
 #[derive(Debug)]
-pub struct Game<H: Player, B: Player> {
+pub struct Game<P1: Player, P2: Player> {
     board: Board,
-    human: H,
-    bot: B,
+    player1: P1,
+    player2: P2,
     current_turn: Cell,
     turns: u32,
 }
 
-impl<H: Player, B: Player> Game<H, B> {
-    pub fn new(human: H, bot: B) -> Self {
+impl<P1: Player, P2: Player> Game<P1, P2> {
+    pub fn new(player1: P1, player2: P2) -> Self {
         Self {
             board: Default::default(),
-            human,
-            bot,
+            player1,
+            player2,
             current_turn: None,
             turns: 0,
         }
     }
 
     pub fn play(&mut self, first: PlayerIndicator) -> EndGame {
-        use self::PlayerIndicator::{Bot, Human};
+        use self::PlayerIndicator::{Player2, Player1};
 
         self.current_turn = Some(first);
 
         loop {
             let (coords, next_turn) = match self.current_turn.unwrap() {
-                Human => (self.human.decide(&self.board), Bot),
-                Bot => (self.bot.decide(&self.board), Human),
+                Player1 => (self.player1.decide(&self.board), Player2),
+                Player2 => (self.player2.decide(&self.board), Player1),
             };
 
             if let Err(e) = self.make_move(&coords) {

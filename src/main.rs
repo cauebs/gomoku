@@ -16,7 +16,7 @@ fn main() {
     // let jptiz = Human::new("jptiz");
     let bot = RandomBot;
 
-    match Game::new(cauebs, bot).play(PlayerIndicator::Bot) {
+    match Game::new(cauebs, bot).play(PlayerIndicator::Player2) {
         Victory(p) => println!("{:?} has won!", p),
         Draw => println!("It's a draw!"),
     };
