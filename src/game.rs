@@ -159,23 +159,35 @@ impl<H: Player, B: Player> Game<H, B> {
         None
     }
 
-    fn diagonal_cell_search(&self, (i, j): (usize, usize), reverse: bool) -> Option<EndGame> {
-        let (mut tracking, mut streak) = (None, 0);
-        for &cell in (0..VICTORY_STREAK).map(|d| match reverse {
-            true => &self.board[i + d][VICTORY_STREAK - 1 + j - d],
-            _ => &self.board[i + d][j + d],
-        }) {
-            streak = match (cell, tracking) {
-                (Some(c), Some(t)) if c == t => streak + 1,
-                (Some(_), _) => 1,
-                (None, _) => 0,
+    fn diagonal_cell_search(&self,
+                            (i, j): (usize, usize),
+                            reverse: bool) -> Option<EndGame> {
+        let tracking = match self.board[j][i] {
+            Some(x) => x,
+            None => return None,
+        };
+
+        let mut streak = 1;
+        let mut x = i;
+        let mut y = j;
+
+        let d: i32 = if reverse { -1 } else { 1 };
+
+        for _ in 1..VICTORY_STREAK {
+            x = (x as i32 + d) as usize;
+            y += 1;
+            let &cell = match &self.board[y][x] {
+                Some(x) => x,
+                None => return None,
             };
 
-            if streak >= VICTORY_STREAK {
-                return tracking.map(EndGame::Victory);
+            if cell == tracking {
+                streak += 1;
             }
+        }
 
-            tracking = cell;
+        if streak >= VICTORY_STREAK {
+            return Some(EndGame::Victory(tracking));
         }
 
         None
@@ -186,14 +198,18 @@ impl<H: Player, B: Player> Game<H, B> {
         let width = self.board.width();
 
         for j in 0..height + 1 - VICTORY_STREAK {
-            for i in 0..width + 1 - VICTORY_STREAK {
-                match self.diagonal_cell_search((i, j), false) {
-                    None => (),
-                    Some(x) => return Some(x),
+            for i in 0..width {
+                if i <= width - VICTORY_STREAK {
+                    match self.diagonal_cell_search((i, j), false) {
+                        None => (),
+                        Some(x) => return Some(x),
+                    }
                 }
-                match self.diagonal_cell_search((i, j), true) {
-                    None => (),
-                    Some(x) => return Some(x),
+                if i >= VICTORY_STREAK - 1 {
+                    match self.diagonal_cell_search((i, j), true) {
+                        None => (),
+                        Some(x) => return Some(x),
+                    }
                 }
             }
         }
