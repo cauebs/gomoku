@@ -12,6 +12,8 @@ pub enum PlayerIndicator {
     Bot,
 }
 
+type Cell = Option<PlayerIndicator>;
+
 pub enum EndGame {
     Victory(PlayerIndicator),
     Draw,
@@ -30,7 +32,7 @@ pub struct Game<H: Player, B: Player> {
     board: Board,
     human: H,
     bot: B,
-    current_turn: Option<PlayerIndicator>,
+    current_turn: Cell,
     turns: u32,
 }
 
@@ -157,30 +159,41 @@ impl<H: Player, B: Player> Game<H, B> {
         None
     }
 
+    fn diagonal_cell_search(&self, (i, j): (usize, usize), reverse: bool) -> Option<EndGame> {
+        let (mut tracking, mut streak) = (None, 0);
+        for &cell in (0..VICTORY_STREAK).map(|d| match reverse {
+            true => &self.board[i + d][VICTORY_STREAK - 1 + j - d],
+            _ => &self.board[i + d][j + d],
+        }) {
+            streak = match (cell, tracking) {
+                (Some(c), Some(t)) if c == t => streak + 1,
+                (Some(_), _) => 1,
+                (None, _) => 0,
+            };
+
+            if streak >= VICTORY_STREAK {
+                return tracking.map(EndGame::Victory);
+            }
+
+            tracking = cell;
+        }
+
+        None
+    }
+
     fn check_for_diagonal_victory(&self) -> Option<EndGame> {
         let height = self.board.height();
         let width = self.board.width();
 
         for j in 0..height + 1 - VICTORY_STREAK {
             for i in 0..width + 1 - VICTORY_STREAK {
-                for dir in [-1, 1].iter() {
-                    let (mut tracking, mut streak) = (None, 0);
-                    for &cell in (0..VICTORY_STREAK).map(|d| match dir {
-                        x if *x < 0 => &self.board[i + d][VICTORY_STREAK - 1 + j - d],
-                        _ => &self.board[i + d][j + d],
-                    }) {
-                        streak = match (cell, tracking) {
-                            (Some(c), Some(t)) if c == t => streak + 1,
-                            (Some(_), _) => 1,
-                            (None, _) => 0,
-                        };
-
-                        if streak >= VICTORY_STREAK {
-                            return tracking.map(EndGame::Victory);
-                        }
-
-                        tracking = cell;
-                    }
+                match self.diagonal_cell_search((i, j), false) {
+                    None => (),
+                    Some(x) => return Some(x),
+                }
+                match self.diagonal_cell_search((i, j), true) {
+                    None => (),
+                    Some(x) => return Some(x),
                 }
             }
         }
