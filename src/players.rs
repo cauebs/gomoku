@@ -45,4 +45,21 @@ impl Player for RandomBot {
     }
 }
 
+pub struct TestBot {
+    moves: Vec<Coordinates>,
+}
+
+impl TestBot {
+    pub fn new(mut moves: Vec<Coordinates>) -> Self {
+        moves.reverse();
+        Self { moves }
+    }
+}
+
+impl Player for TestBot {
+    fn decide(&mut self, _board: &Board) -> Coordinates {
+        self.moves.pop().expect("Not enough moves.")
+    }
+}
+
 // TODO: implement intelligent bot
