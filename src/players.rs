@@ -19,8 +19,10 @@ impl Human {
 }
 
 impl Player for Human {
-    fn decide(&mut self, _: &Board) -> Coordinates {
+    fn decide(&mut self, board: &Board) -> Coordinates {
         loop {
+            println!("\n{}", board);
+
             print!("{}, insert your next move ([0-E],[0-E]): ", self.0);
             stdout().flush().expect("Failed to flush stdout.");
 

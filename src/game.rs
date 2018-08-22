@@ -14,6 +14,7 @@ pub enum PlayerIndicator {
 
 type Cell = Option<PlayerIndicator>;
 
+#[derive(Debug, PartialEq)]
 pub enum EndGame {
     Victory(PlayerIndicator),
     Draw,
@@ -63,8 +64,6 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
                 continue;
             }
 
-            println!("\n{}", self.board);
-
             if let Some(end) = self.check_end() {
                 return end;
             }
@@ -89,7 +88,7 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         Ok(())
     }
 
-    fn check_end(&self) -> Option<EndGame> {
+    pub fn check_end(&self) -> Option<EndGame> {
         if let Some(end) = self.check_for_horizontal_victory() {
             return Some(end);
         }

@@ -8,6 +8,9 @@ mod coordinates;
 mod game;
 mod players;
 
+#[cfg(test)]
+mod tests;
+
 use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Human, RandomBot};
 

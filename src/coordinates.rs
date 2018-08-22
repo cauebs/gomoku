@@ -1,6 +1,6 @@
 use failure;
 
-use std::str::FromStr;
+use std::{convert::From, str::FromStr};
 
 pub struct Coordinates(pub usize, pub usize);
 
@@ -30,5 +30,11 @@ impl Coordinates {
         let y = usize::from_str_radix(y, 16)?;
 
         Ok(Coordinates(x, y))
+    }
+}
+
+impl From<(usize, usize)> for Coordinates {
+    fn from(other: (usize, usize)) -> Self {
+        Coordinates(other.0, other.1)
     }
 }
