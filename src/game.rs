@@ -159,7 +159,9 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         None
     }
 
-    fn diagonal_cell_search(&self, mut x: usize, mut y: usize, reverse: bool) -> Option<EndGame> {
+    fn diagonal_cell_search(&self, coords: &Coordinates, reverse: bool) -> Option<EndGame> {
+        let (mut x, mut y) = (coords.0, coords.1);
+
         let tracking = self.board[y][x]?;
         let mut streak = 1;
 
@@ -187,13 +189,16 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
 
         for x in 0..height + 1 - VICTORY_STREAK {
             for y in 0..width {
+                let coords = Coordinates(x, y);
+
                 if y <= width - VICTORY_STREAK {
-                    if let Some(end) = self.diagonal_cell_search(x, y, false) {
+                    if let Some(end) = self.diagonal_cell_search(&coords, false) {
                         return Some(end);
                     }
                 }
+
                 if y >= VICTORY_STREAK - 1 {
-                    if let Some(end) = self.diagonal_cell_search(x, y, true) {
+                    if let Some(end) = self.diagonal_cell_search(&coords, true) {
                         return Some(end);
                     }
                 }
