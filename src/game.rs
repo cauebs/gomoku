@@ -12,8 +12,6 @@ pub enum PlayerIndicator {
     Player2,
 }
 
-type Cell = Option<PlayerIndicator>;
-
 #[derive(Debug, PartialEq)]
 pub enum EndGame {
     Victory(PlayerIndicator),
@@ -33,7 +31,7 @@ pub struct Game<P1: Player, P2: Player> {
     board: Board,
     player1: P1,
     player2: P2,
-    current_turn: Cell,
+    current_turn: Option<PlayerIndicator>,
     turns: u32,
 }
 
@@ -49,7 +47,7 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
     }
 
     pub fn play(&mut self, first: PlayerIndicator) -> EndGame {
-        use self::PlayerIndicator::{Player2, Player1};
+        use self::PlayerIndicator::{Player1, Player2};
 
         self.current_turn = Some(first);
 
@@ -85,6 +83,7 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
 
         *cell = self.current_turn;
 
+        self.turns += 1;
         Ok(())
     }
 

@@ -7,7 +7,7 @@ use game::PlayerIndicator;
 
 type BoardArray = [[Option<PlayerIndicator>; 15]; 15];
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Board(BoardArray);
 
 impl Board {

@@ -5,6 +5,8 @@ use std::io::{stdin, stdout, Write};
 use board::Board;
 use coordinates::Coordinates;
 
+pub use ai::SmartBot;
+
 pub trait Player {
     fn decide(&mut self, board: &Board) -> Coordinates;
 }

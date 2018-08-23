@@ -2,6 +2,7 @@ use failure;
 
 use std::{convert::From, str::FromStr};
 
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Coordinates(pub usize, pub usize);
 
 #[derive(Fail, Debug)]
