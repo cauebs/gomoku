@@ -21,8 +21,10 @@
             - Qualquer cenário de vitória iminente com uma das peças do jogador
               substituída por um espaço
 
-        - Função: { contém vitória iminente => inf, senão => Cp * Qp + sum(Ce *
-          Np for each e) }
+        - Função: {
+            contém vitória iminente => inf,
+            senão => Cp * Qp + sum(Ce * Np for each e)
+        }
     - Utilidade:
         - Cn * Número de jogadas;
 
@@ -39,5 +41,4 @@
 
 Quanto à definição matemática da utilidade e heurística, será avaliado um
 estudo das possibilidades que o grupo pretende adotar e o resultado do estudo
-
 em uma função matemática.

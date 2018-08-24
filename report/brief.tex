@@ -1,0 +1,137 @@
+%-------------------------------------------------------------------------------
+\documentclass{article}
+
+%-------------------------------------------------------------------------------
+% Packages
+\usepackage{amsmath}
+\usepackage[portuguese]{babel}
+\usepackage{othelloboard}
+
+%-------------------------------------------------------------------------------
+% User-commands
+\newcommand{\todo}[1]{{\color{red}{#1}}}
+
+%-------------------------------------------------------------------------------
+% Project configs
+\title{Relatório de I.A.: Gomoku, Parte 1}
+\author{Cauê Baasch de Souza \\
+        João Paulo Taylor Ienczak Zanette}
+\date{\today}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+    \maketitle{}
+
+    \section{Modelo de estados e do jogo}
+
+    O projeto foi modelado como:
+
+    \begin{description}
+        \item [Estados:] Cada estado é uma Matriz (implementada como um
+            \textit{array} bi-dimensional), em que cada elemento indica a
+            presença de uma pedra e, quando há a presença efetiva, de qual
+            jogador.
+
+        \item [O jogo:] Uma estrutura que contém o estado atual do tabuleiro,
+            os dois jogadores (dados como instâncias de qualquer tipo que
+            obedeça uma interface padrão \texttt{Player}), um indicador
+            marcando de quem é a vez, e o número total de jogadas até o
+            momento.
+    \end{description}
+
+    \section{Heurística e Função de Utilidade}
+
+    Para formular a heurística, são adotadas as seguintes categorias de
+    cenários:
+
+    \begin{description}
+        \item [Vitória iminente:] Quando, se na vez da I.A., a vitória é
+            garantida apenas colocando uma única peça no tabuleiro. As
+            possibilidades desse cenário são quando há:
+            \begin{itemize}
+                \item Uma quádrupla (não necessariamente contígua) com espaço
+                    para virar uma quíntupla (Figura~\ref{win-four}).
+                \item Duas triplas (não necessariamente contíguas) com um
+                    espaço compartilhado (Figura~\ref{win-shared-triple}).
+                \item Dois espaços separados apenas por uma permutação de 4
+                    elementos $\langle X, X, X, E \rangle$, em que X é uma peça
+                    do jogador atual (Figura~\ref{win-four-permut}).
+            \end{itemize}
+
+        \item [Possível vitória:] Qualquer caso semelhante aos de vitória
+            iminente, porém com uma peça do jogador substituída por um espaço
+            vazio.
+    \end{description}
+
+    Sendo assim, a função de heurística adotada está descrita na
+    Equação~\ref{heuristic-function}:
+
+    \begin{equation}
+        H(s) = \begin{cases}
+            \infty, & \mbox{Se há vitória iminente} \\
+            C_p * Q_p + \sum_{e \in E} C_e * N_p, & \mbox{Em qualquer outro caso}
+        \end{cases}
+        \label{heuristic-function}
+    \end{equation}
+
+    Em que:
+
+    \begin{itemize}
+        \item $s$ é um estado do jogo.
+        \item $C_x$ indica uma constante relacionada à categoria de $x$.
+        \item $N_p$ indica o número de peças de \todo{noideawhat}.
+        \item $Q_p$ \todo{eu realmente não lembro}.
+        \item $E$ \todo{não lembro o que descreve, mas é o conjunto de $e$'s}.
+    \end{itemize}
+
+    \section{Estruturas adicionais}
+
+    \todo{TERMINAR ESTA CAVALA IMUNDA.}
+
+    \section{Otimizações planejadas}
+
+    \todo{TERMINAR ESTA CAVALA IMUNDA.}
+
+    \begin{figure}[h]
+        \centering
+        \caption{Exemplo de quádrupla contígua. No exemplo, o
+        jogador garante sua vitória quando posicionar uma peça
+        em $(1, a)$ ou $(1, f)$.\label{win-four}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{-XX-XX--}
+        \end{othelloboard}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \caption{Exemplo de permutação de $\langle X, X, X, E
+        \rangle$. No exemplo, posicionando uma peça em $(1, c)$
+        garante vitória no turno seguinte, sem chances de o
+        oponente escapar.\label{win-four-permut}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{%
+                -X-XX---%
+            }
+        \end{othelloboard}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \caption{Exemplo de duas triplas não-contíguas. No
+        exemplo, posicionando uma peça em $(1, a)$ garante
+        vitória no turno seguinte, sem chances de o oponente
+        escapar.\label{win-shared-triple}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{%
+                -X-XX---%
+                --------%
+                X-------%
+                X-------%
+                X-------%
+            }
+        \end{othelloboard}
+    \end{figure}
+\end{document}
