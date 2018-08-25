@@ -1,0 +1,152 @@
+%-------------------------------------------------------------------------------
+\documentclass{article}
+
+%-------------------------------------------------------------------------------
+% Packages
+\usepackage{amsmath}
+\usepackage[portuguese]{babel}
+\usepackage{othelloboard}
+
+%-------------------------------------------------------------------------------
+% User-commands
+\newcommand{\todo}[1]{{\color{red}{#1}}}
+
+%-------------------------------------------------------------------------------
+% Project configs
+\title{Relatório de I.A.: Gomoku, Parte 1}
+\author{Cauê Baasch de Souza \\
+        João Paulo Taylor Ienczak Zanette}
+\date{\today}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+    \maketitle{}
+
+    \section{Modelo de estados e do jogo}
+
+    O projeto foi modelado como:
+
+    \begin{description}
+        \item [Estados:] Cada estado é uma matriz (implementada como um
+            \textit{array} bi-dimensional) cujos elementos representam as casas
+            do tabuleiro, indicando se há uma pedra nela e a que jogador ela
+            pertence.
+
+        \item [O jogo:] Uma estrutura que contém o estado atual do tabuleiro,
+            os dois jogadores (dados como instâncias de qualquer tipo que
+            obedeça uma interface padrão \texttt{Player}), um indicador
+            que marca de quem é a vez, e o número total de jogadas até o
+            momento.
+    \end{description}
+
+    \section{Heurística}
+
+    Para definir a função, são definidos os seguintes cenários:
+
+    \begin{description}
+        \item [Vitória:] Um cenário com uma quíntupla contígua.
+
+        \item [Vitória iminente:] Quando a vitória é garantida apenas colocando
+        uma única peça no tabuleiro. Isso ocorre quando há:
+            \begin{itemize}
+                \item Uma quádrupla (não necessariamente contígua) com espaço
+                    para virar uma quíntupla (Figura~\ref{win-four}).
+                \item Duas triplas (não necessariamente contíguas) com um
+                    espaço compartilhado (Figura~\ref{win-shared-triple}).
+                \item Dois espaços separados apenas por uma permutação de 4
+                    elementos $\langle X, X, X, E \rangle$, em que X é uma peça
+                    do jogador atual (Figura~\ref{win-four-permut}).
+            \end{itemize}
+
+        \item [Possível vitória:] Um cenário de vitória iminente com uma peça
+        do jogador substituída por um espaço vazio.
+    \end{description}
+
+    Sendo assim, a função adotada está descrita na Equação~\ref{heuristic-function}:
+
+    \begin{equation}
+        H(s) = \begin{cases}
+            \infty, & \mbox{Se há pelo menos um cenário de vitória} \\
+            c_i * Q_i + c_p * Q_p(s) + c_j * Q_j(s) + \sum_{e\in E(s)} c_e * {Q_p}_e(s), & \mbox{Em qualquer outro caso}
+        \end{cases}
+        \label{heuristic-function}
+    \end{equation}
+
+    Em que:
+
+    \begin{itemize}
+        \item $s$ é um estado do jogo;
+        \item $c_x$ é uma constante relacionada à categoria de $x$;
+        \item $Q_i(s)$ é a quantidade de cenários de vitória iminente distintos
+        presentes em $s$;
+        \item $Q_p(s)$ é a quantidade de cenários de possível vitória distintos
+        presentes em $s$;
+        \item $Q_j(s)$ é a quantidade de jogadas totais que foram feitas até o
+        jogo chegar em $s$;
+        \item $E(s)$ é o conjunto de casas em branco (espaços) presentes em $s$;
+        \item ${Q_p}_e(s)$ é a quantidade de cenários de possível vitória
+        distintos em $s$ que compartilham o mesmo espaço $e$.
+    \end{itemize}
+
+    Também é calculada a heurística do ponto de vista do oponente,
+    e subtraída do valor calculado para si.
+
+    \section{Estruturas adicionais}
+
+    Faremos uso de uma árvore cujos vértices representam os estados do jogo,
+    com um marcador que indica a qual jogador está associado o nível e os
+    valores de alfa, beta, e da heurística. Os filhos de um vértice serão os
+    estados do jogo aos quais é possível chegar em uma única jogada.
+
+    \section{Otimizações planejadas}
+
+    \begin{itemize}
+        \item Podas alfa-beta;
+        \item Aprofundamento progressivo;
+        \item \textit{Multi-threading};
+        \item Tempo limite para cálculo de uma jogada.
+    \end{itemize}
+
+    \begin{figure}[h]
+        \centering
+        \caption{Exemplo de quádrupla contígua. No exemplo, o
+        jogador garante sua vitória quando posicionar uma peça
+        em $(1, a)$ ou $(1, f)$.\label{win-four}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{-XX-XX--}
+        \end{othelloboard}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \caption{Exemplo de permutação de $\langle X, X, X, E
+        \rangle$. No exemplo, posicionando uma peça em $(1, c)$
+        garante vitória no turno seguinte, sem chances de o
+        oponente escapar.\label{win-four-permut}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{%
+                -X-XX---%
+            }
+        \end{othelloboard}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \caption{Exemplo de duas triplas não-contíguas. No
+        exemplo, posicionando uma peça em $(1, a)$ garante
+        vitória no turno seguinte, sem chances de o oponente
+        escapar.\label{win-shared-triple}}
+        \begin{othelloboard}{1}
+            \dotmarkings{}
+            \drawboardfromstring{%
+                -X-XX---%
+                --------%
+                X-------%
+                X-------%
+                X-------%
+            }
+        \end{othelloboard}
+    \end{figure}
+\end{document}
