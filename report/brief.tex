@@ -27,27 +27,27 @@
     O projeto foi modelado como:
 
     \begin{description}
-        \item [Estados:] Cada estado é uma Matriz (implementada como um
-            \textit{array} bi-dimensional), em que cada elemento indica a
-            presença de uma pedra e, quando há a presença efetiva, de qual
-            jogador.
+        \item [Estados:] Cada estado é uma matriz (implementada como um
+            \textit{array} bi-dimensional) cujos elementos representam as casas
+            do tabuleiro, indicando se há uma pedra nela e a que jogador ela
+            pertence.
 
         \item [O jogo:] Uma estrutura que contém o estado atual do tabuleiro,
             os dois jogadores (dados como instâncias de qualquer tipo que
             obedeça uma interface padrão \texttt{Player}), um indicador
-            marcando de quem é a vez, e o número total de jogadas até o
+            que marca de quem é a vez, e o número total de jogadas até o
             momento.
     \end{description}
 
-    \section{Heurística e Função de Utilidade}
+    \section{Heurística}
 
-    Para formular a heurística, são adotadas as seguintes categorias de
-    cenários:
+    Para definir a função, são definidos os seguintes cenários:
 
     \begin{description}
-        \item [Vitória iminente:] Quando, se na vez da I.A., a vitória é
-            garantida apenas colocando uma única peça no tabuleiro. As
-            possibilidades desse cenário são quando há:
+        \item [Vitória:] Um cenário com uma quíntupla contígua.
+
+        \item [Vitória iminente:] Quando a vitória é garantida apenas colocando
+        uma única peça no tabuleiro. Isso ocorre quando há:
             \begin{itemize}
                 \item Uma quádrupla (não necessariamente contígua) com espaço
                     para virar uma quíntupla (Figura~\ref{win-four}).
@@ -58,18 +58,17 @@
                     do jogador atual (Figura~\ref{win-four-permut}).
             \end{itemize}
 
-        \item [Possível vitória:] Qualquer caso semelhante aos de vitória
-            iminente, porém com uma peça do jogador substituída por um espaço
-            vazio.
+        \item [Possível vitória:] Um cenário de vitória iminente com uma peça
+        do jogador substituída por um espaço vazio.
     \end{description}
 
-    Sendo assim, a função de heurística adotada está descrita na
-    Equação~\ref{heuristic-function}:
+    Sendo assim, a função adotada está descrita na Equação~\ref{heuristic-function}:
 
     \begin{equation}
         H(s) = \begin{cases}
-            \infty, & \mbox{Se há vitória iminente} \\
-            C_p * Q_p + \sum_{e \in E} C_e * N_p, & \mbox{Em qualquer outro caso}
+            \infty, & \mbox{Se há pelo menos um cenário de vitória}
+                      \vspace{1em} \nonumber \\
+            c_i * Q_i + c_p * Q_p(s) + c_j * Q_j(s) + \sum_{e\in E(s)} c_e * {Q_p}_e(s), & \mbox{Em qualquer outro caso} \nonumber \\
         \end{cases}
         \label{heuristic-function}
     \end{equation}
@@ -77,22 +76,39 @@
     Em que:
 
     \begin{itemize}
-        \item $s$ é um estado do jogo.
-        \item $C_x$ indica uma constante relacionada à categoria de $x$.
-        \item $N_p$ indica o número de peças de \todo{noideawhat}.
-        \item $Q_p$ \todo{eu realmente não lembro}.
-        \item $E$ \todo{não lembro o que descreve, mas é o conjunto de $e$'s}.
+        \item $s$ é um estado do jogo;
+        \item $c_x$ é uma constante relacionada à categoria de $x$;
+        \item $Q_i(s)$ é a quantidade de cenários de vitória iminente distintos
+        presentes em $s$;
+        \item $Q_p(s)$ é a quantidade de cenários de possível vitória distintos
+        presentes em $s$;
+        \item $Q_j(s)$ é a quantidade de jogadas totais que foram feitas até o
+        jogo chegar em $s$;
+        \item $E(s)$ é o conjunto de casas em branco (espaços) presentes em $s$;
+        \item ${Q_p}_e(s)$ é a quantidade de cenários de possível vitória
+        distintos em $s$ que compartilham o mesmo espaço $e$.
     \end{itemize}
+
+    Também é calculada a heurística do ponto de vista do oponente,
+    e subtraída do valor calculado para si.
 
     \section{Estruturas adicionais}
 
-    \todo{TERMINAR ESTA CAVALA IMUNDA.}
+    Faremos uso de uma árvore cujos vértices representam os estados do jogo,
+    com um marcador que indica a qual jogador está associado o nível e os
+    valores de alfa, beta, e da heurística. Os filhos de um vértice serão os
+    estados do jogo aos quais é possível chegar em uma única jogada.
 
     \section{Otimizações planejadas}
 
-    \todo{TERMINAR ESTA CAVALA IMUNDA.}
+    \begin{itemize}
+        \item Podas alfa-beta;
+        \item Aprofundamento progressivo;
+        \item \textit{Multi-threading};
+        \item Tempo limite para cálculo de uma jogada.
+    \end{itemize}
 
-    \begin{figure}[h]
+    \begin{figure}[ht]
         \centering
         \caption{Exemplo de quádrupla contígua. No exemplo, o
         jogador garante sua vitória quando posicionar uma peça
