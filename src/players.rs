@@ -2,11 +2,12 @@ use rand::{thread_rng, Rng};
 
 use std::io::{stdin, stdout, Write};
 
+pub use ai::SmartBot;
 use board::Board;
-use coordinates::Coordinates;
+use coordinates::coordinates_from_hex_str;
 
 pub trait Player {
-    fn decide(&mut self, board: &Board) -> Coordinates;
+    fn decide(&mut self, board: &Board, last_move: Option<(usize, usize)>) -> (usize, usize);
 }
 
 #[derive(Debug)]
@@ -19,7 +20,7 @@ impl Human {
 }
 
 impl Player for Human {
-    fn decide(&mut self, board: &Board) -> Coordinates {
+    fn decide(&mut self, board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
         loop {
             println!("\n{}", board);
 
@@ -28,7 +29,7 @@ impl Player for Human {
 
             let mut buffer = String::new();
             if stdin().read_line(&mut buffer).is_ok() {
-                if let Ok(coords) = Coordinates::from_hex_str(buffer.trim()) {
+                if let Ok(coords) = coordinates_from_hex_str(buffer.trim()) {
                     return coords;
                 }
             }
@@ -41,25 +42,25 @@ impl Player for Human {
 pub struct RandomBot;
 
 impl Player for RandomBot {
-    fn decide(&mut self, _board: &Board) -> Coordinates {
+    fn decide(&mut self, _board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
         let mut rng = thread_rng();
-        Coordinates(rng.gen_range(0, 15), rng.gen_range(0, 15))
+        (rng.gen_range(0, 15), rng.gen_range(0, 15))
     }
 }
 
 pub struct TestBot {
-    moves: Vec<Coordinates>,
+    moves: Vec<(usize, usize)>,
 }
 
 impl TestBot {
-    pub fn new(mut moves: Vec<Coordinates>) -> Self {
+    pub fn new(mut moves: Vec<(usize, usize)>) -> Self {
         moves.reverse();
         Self { moves }
     }
 }
 
 impl Player for TestBot {
-    fn decide(&mut self, _board: &Board) -> Coordinates {
+    fn decide(&mut self, _board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
         self.moves.pop().expect("Not enough moves.")
     }
 }

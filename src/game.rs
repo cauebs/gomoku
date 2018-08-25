@@ -1,7 +1,4 @@
-use failure;
-
 use board::Board;
-use coordinates::Coordinates;
 use players::Player;
 
 const VICTORY_STREAK: usize = 5;
@@ -12,20 +9,10 @@ pub enum PlayerIndicator {
     Player2,
 }
 
-type Cell = Option<PlayerIndicator>;
-
 #[derive(Debug, PartialEq)]
 pub enum EndGame {
     Victory(PlayerIndicator),
     Draw,
-}
-
-#[derive(Fail, Debug)]
-enum Error {
-    #[fail(display = "Cell is already occupied.")]
-    OccupiedCell,
-    #[fail(display = "Coordinates out of bounds.")]
-    CoordinatesOutOfBounds,
 }
 
 #[derive(Debug)]
@@ -33,8 +20,8 @@ pub struct Game<P1: Player, P2: Player> {
     board: Board,
     player1: P1,
     player2: P2,
-    current_turn: Cell,
-    turns: u32,
+    current_turn: PlayerIndicator,
+    moves: Vec<(usize, usize)>,
 }
 
 impl<P1: Player, P2: Player> Game<P1, P2> {
@@ -43,49 +30,52 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
             board: Default::default(),
             player1,
             player2,
-            current_turn: None,
-            turns: 0,
+            current_turn: PlayerIndicator::Player1,
+            moves: Vec::new(),
         }
     }
 
-    pub fn play(&mut self, first: PlayerIndicator) -> EndGame {
-        use self::PlayerIndicator::{Player2, Player1};
+    pub fn play_turn(&mut self) -> Option<EndGame> {
+        use self::PlayerIndicator::{Player1, Player2};
 
-        self.current_turn = Some(first);
+        let last_move = self.moves.last().cloned();
 
         loop {
-            let (coords, next_turn) = match self.current_turn.unwrap() {
-                Player1 => (self.player1.decide(&self.board), Player2),
-                Player2 => (self.player2.decide(&self.board), Player1),
+            let (coords, next_turn) = match self.current_turn {
+                Player1 => (self.player1.decide(&self.board, last_move), Player2),
+                Player2 => (self.player2.decide(&self.board, last_move), Player1),
             };
 
-            if let Err(e) = self.make_move(&coords) {
-                println!("Invalid move: {}\n", e);
+            if let Err(e) = self.board.make_move(self.current_turn, coords) {
+                eprintln!("Jogada inválida: {}", e);
                 continue;
+            } else {
+                self.moves.push(coords);
+                self.current_turn = next_turn;
+                break;
             }
-
-            if let Some(end) = self.check_end() {
-                return end;
-            }
-
-            self.current_turn = Some(next_turn);
         }
+
+        self.check_end()
     }
 
-    fn make_move(&mut self, coords: &Coordinates) -> Result<(), failure::Error> {
-        if coords.0 >= 15 || coords.1 >= 15 {
-            Err(Error::CoordinatesOutOfBounds)?;
+    pub fn play_turns(&mut self, turns: u32) -> Option<EndGame> {
+        for _ in 0..turns {
+            let end = self.play_turn();
+            if end.is_some() {
+                return end;
+            }
         }
 
-        let cell = &mut self.board[coords.0][coords.1];
+        None
+    }
 
-        if cell.is_some() {
-            Err(Error::OccupiedCell)?;
+    pub fn play_to_end(&mut self) -> EndGame {
+        loop {
+            if let Some(end) = self.play_turn() {
+                return end;
+            }
         }
-
-        *cell = self.current_turn;
-
-        Ok(())
     }
 
     pub fn check_end(&self) -> Option<EndGame> {
@@ -135,11 +125,11 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
     }
 
     fn check_for_vertical_victory(&self) -> Option<EndGame> {
-        for x in 0..self.board.width() {
+        for j in 0..self.board.width() {
             let (mut tracking, mut streak) = (None, 0);
 
-            for y in 0..self.board.height() {
-                let cell = self.board[y][x];
+            for i in 0..self.board.height() {
+                let cell = self.board[i][j];
 
                 streak = match (cell, tracking) {
                     (Some(c), Some(t)) if c == t => streak + 1,
@@ -158,19 +148,19 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         None
     }
 
-    fn diagonal_cell_search(&self, coords: &Coordinates, reverse: bool) -> Option<EndGame> {
-        let (mut x, mut y) = (coords.0, coords.1);
+    fn diagonal_cell_search(&self, coords: (usize, usize), reverse: bool) -> Option<EndGame> {
+        let (mut i, mut j) = (coords.0, coords.1);
 
-        let tracking = self.board[y][x]?;
+        let tracking = self.board[i][j]?;
         let mut streak = 1;
 
-        let d: i32 = if reverse { -1 } else { 1 };
+        let d = if reverse { -1 } else { 1 };
 
         for _ in 0..VICTORY_STREAK - 1 {
-            x = (x as i32 + d) as usize;
-            y += 1;
+            i += 1;
+            j = (j as isize + d) as usize;
 
-            if self.board[y][x]? == tracking {
+            if self.board[i][j]? == tracking {
                 streak += 1;
             }
         }
@@ -186,18 +176,16 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         let height = self.board.height();
         let width = self.board.width();
 
-        for x in 0..height + 1 - VICTORY_STREAK {
-            for y in 0..width {
-                let coords = Coordinates(x, y);
-
-                if y <= width - VICTORY_STREAK {
-                    if let Some(end) = self.diagonal_cell_search(&coords, false) {
+        for i in 0..height + 1 - VICTORY_STREAK {
+            for j in 0..width {
+                if j <= width - VICTORY_STREAK {
+                    if let Some(end) = self.diagonal_cell_search((i, j), false) {
                         return Some(end);
                     }
                 }
 
-                if y >= VICTORY_STREAK - 1 {
-                    if let Some(end) = self.diagonal_cell_search(&coords, true) {
+                if j >= VICTORY_STREAK - 1 {
+                    if let Some(end) = self.diagonal_cell_search((i, j), true) {
                         return Some(end);
                     }
                 }

@@ -1,3 +1,5 @@
+use failure;
+
 use std::{
     fmt,
     ops::{Deref, DerefMut},
@@ -5,18 +7,43 @@ use std::{
 
 use game::PlayerIndicator;
 
+#[derive(Fail, Debug, PartialEq)]
+enum Error {
+    #[fail(display = "Cell is already occupied.")]
+    OccupiedCell,
+    #[fail(display = "Coordinates out of bounds.")]
+    CoordinatesOutOfBounds,
+}
+
 type BoardArray = [[Option<PlayerIndicator>; 15]; 15];
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Board(BoardArray);
 
 impl Board {
     pub fn width(&self) -> usize {
-        self[0].len()
+        self.0[0].len()
     }
 
     pub fn height(&self) -> usize {
-        self.len()
+        self.0.len()
+    }
+
+    pub fn make_move(
+        &mut self,
+        player: PlayerIndicator,
+        coords: (usize, usize),
+    ) -> Result<(), failure::Error> {
+        if coords.0 >= 15 || coords.1 >= 15 {
+            Err(Error::CoordinatesOutOfBounds)?;
+        }
+
+        if self[coords.0][coords.1].is_some() {
+            Err(Error::OccupiedCell)?;
+        }
+
+        self[coords.0][coords.1] = Some(player);
+        Ok(())
     }
 }
 
@@ -37,7 +64,7 @@ impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use game::PlayerIndicator::*;
 
-        writeln!(f, "  {}", " _".repeat(self[0].len()))?;
+        writeln!(f, "  {}", " _".repeat(self.width()))?;
 
         for (i, row) in self.iter().enumerate() {
             write!(f, "{:X} |", i)?;
@@ -55,7 +82,7 @@ impl fmt::Display for Board {
         }
 
         write!(f, "  ")?;
-        for (j, _column) in self[0].iter().enumerate() {
+        for (j, _column) in self.0[0].iter().enumerate() {
             write!(f, " {:X}", j)?;
         }
         writeln!(f)?;
