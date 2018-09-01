@@ -16,6 +16,7 @@ enum Error {
 }
 
 type BoardArray = [[Option<PlayerIndicator>; 15]; 15];
+pub type Coord = (usize, usize);
 
 #[derive(Debug, Default, Clone)]
 pub struct Board(BoardArray);

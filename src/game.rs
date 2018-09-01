@@ -1,4 +1,6 @@
-use board::Board;
+use std::collections::HashSet;
+
+use board::{Board, Coord};
 use players::Player;
 
 const VICTORY_STREAK: usize = 5;
@@ -194,4 +196,18 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
 
         None
     }
+}
+
+pub fn possible_moves<T: Player, U: Player>(game: &Game<T, U>) -> HashSet<Coord> {
+    let board = &game.board;
+    let mut result = HashSet::new();
+    for (i, row) in board.iter().enumerate() {
+        for (j, cell) in row.iter().enumerate() {
+            match cell {
+                None => { result.insert((i, j)); },
+                _ => {},
+            };
+        }
+    }
+    result
 }
