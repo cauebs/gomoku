@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
-use game::{EndGame::*, Game, PlayerIndicator::*, possible_moves};
+use game::{possible_moves, EndGame::*, Game, PlayerIndicator::*};
 use players::TestBot;
-use board::Coord;
 
 #[test]
 fn test_horizontal_wrap() {
@@ -28,10 +27,7 @@ fn test_horizontal_victory() {
 
     let p2 = TestBot::new(vec![(0, 5), (0, 7), (0, 9), (0, 11), (0, 13)]);
 
-    assert_eq!(
-        Game::new(p1, p2).play_turns(10),
-        Some(Victory(Player1))
-    );
+    assert_eq!(Game::new(p1, p2).play_turns(10), Some(Victory(Player1)));
 }
 
 #[test]
@@ -40,10 +36,7 @@ fn test_vertical_victory() {
 
     let p2 = TestBot::new(vec![(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]);
 
-    assert_eq!(
-        Game::new(p1, p2).play_turns(10),
-        Some(Victory(Player2))
-    );
+    assert_eq!(Game::new(p1, p2).play_turns(10), Some(Victory(Player2)));
 }
 
 #[test]
@@ -54,28 +47,19 @@ fn test_diagonal_victory() {
 
     let p2 = TestBot::new(vec![(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]);
 
-    assert_eq!(
-        Game::new(p1, p2).play_turns(10),
-        Some(Victory(Player2))
-    );
+    assert_eq!(Game::new(p1, p2).play_turns(10), Some(Victory(Player2)));
 
     let p1 = TestBot::new(p1_moves.clone());
 
     let p2 = TestBot::new(vec![(0, 14), (1, 13), (2, 12), (3, 11), (4, 10)]);
 
-    assert_eq!(
-        Game::new(p1, p2).play_turns(10),
-        Some(Victory(Player2))
-    );
+    assert_eq!(Game::new(p1, p2).play_turns(10), Some(Victory(Player2)));
 
     let p1 = TestBot::new(p1_moves.clone());
 
     let p2 = TestBot::new(vec![(1, 5), (2, 6), (3, 7), (4, 8), (5, 9)]);
 
-    assert_eq!(
-        Game::new(p1, p2).play_turns(10),
-        Some(Victory(Player2))
-    );
+    assert_eq!(Game::new(p1, p2).play_turns(10), Some(Victory(Player2)));
 }
 
 #[test]
@@ -95,19 +79,13 @@ fn test_possible_moves() {
         }
     }
 
-    assert_eq!(
-        possible_moves(&game),
-        expected
-    );
+    assert_eq!(possible_moves(&game.board), expected);
 
     for (p1_move, p2_move) in p1_moves.iter().zip(&p2_moves) {
         for p in [p1_move, p2_move].iter() {
             game.play_turns(1);
             expected.remove(p);
-            assert_eq!(
-                possible_moves(&game),
-                expected
-            );
+            assert_eq!(possible_moves(&game.board), expected);
         }
     }
 }

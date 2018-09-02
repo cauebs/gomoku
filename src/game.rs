@@ -19,7 +19,7 @@ pub enum EndGame {
 
 #[derive(Debug)]
 pub struct Game<P1: Player, P2: Player> {
-    board: Board,
+    pub board: Board,
     player1: P1,
     player2: P2,
     current_turn: PlayerIndicator,
@@ -198,14 +198,15 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
     }
 }
 
-pub fn possible_moves<T: Player, U: Player>(game: &Game<T, U>) -> HashSet<Coord> {
-    let board = &game.board;
+pub fn possible_moves(board: &Board) -> HashSet<Coord> {
     let mut result = HashSet::new();
     for (i, row) in board.iter().enumerate() {
         for (j, cell) in row.iter().enumerate() {
             match cell {
-                None => { result.insert((i, j)); },
-                _ => {},
+                None => {
+                    result.insert((i, j));
+                }
+                _ => {}
             };
         }
     }
