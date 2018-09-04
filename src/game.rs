@@ -3,7 +3,7 @@ use players::Player;
 
 const VICTORY_STREAK: usize = 5;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Hash, Eq, Clone, Copy, PartialEq)]
 pub enum PlayerIndicator {
     Player1,
     Player2,
@@ -21,7 +21,7 @@ pub struct Game<P1: Player, P2: Player> {
     player1: P1,
     player2: P2,
     current_turn: PlayerIndicator,
-    moves: Vec<(usize, usize)>,
+    pub moves: Vec<(usize, usize)>,
 }
 
 impl<P1: Player, P2: Player> Game<P1, P2> {
@@ -184,6 +184,7 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
                     }
                 }
 
+                // TODO: Remover comparação e trocar por i + VICTORY_STREAK - 1
                 if j >= VICTORY_STREAK - 1 {
                     if let Some(end) = self.diagonal_cell_search((i, j), true) {
                         return Some(end);

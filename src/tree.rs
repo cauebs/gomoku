@@ -16,6 +16,12 @@ pub struct DecisionTree {
     children: HashMap<Coord, Box<DecisionTree>>,
 }
 
+impl Default for DecisionTree {
+    fn default() -> Self {
+        Self::new(Board::default(), PlayerIndicator::Player1)
+    }
+}
+
 impl DecisionTree {
     pub fn new(state: Board, player: PlayerIndicator) -> Self {
         Self {
@@ -28,56 +34,50 @@ impl DecisionTree {
         }
     }
 
-    pub fn deepen<F>(&mut self, evaluator: &F, depth: u32)
+    pub fn deepen<F>(&mut self, evaluator: &F, remaining_levels: u32, player: PlayerIndicator)
     where
-        F: Fn(&Board) -> i32,
-    {
-        self.deepen_aux(evaluator, depth);
-    }
-
-    fn deepen_aux<F>(&mut self, evaluator: &F, remaining_levels: u32)
-    where
-        F: Fn(&Board) -> i32,
+        F: Fn(&Board, PlayerIndicator) -> i32,
     {
         use PlayerIndicator::{Player1, Player2};
 
-        let possible_moves = self.state.possible_moves();
-
-        if remaining_levels == 0 || possible_moves.is_empty() {
-            self.static_value = Some(evaluator(&self.state));
+        // TODO: check if it's a leaf node
+        if remaining_levels == 0 {
+            self.static_value = Some(evaluator(&self.state, player));
             return;
         }
 
-        for next_move in possible_moves {
+        for next_move in self.state.possible_moves() {
             let mut next_state = self.state.clone();
             next_state
                 .make_move(self.player, next_move)
                 .expect("AI thinks it can make a move it actually cannot!");
 
             let next_player = match self.player {
-                Player1 => {
-                    if let Some(value) = self.static_value {
-                        self.beta = min(value, self.beta);
-                    }
-                    Player2
-                }
-                Player2 => {
-                    if let Some(value) = self.static_value {
-                        self.alpha = max(value, self.alpha);
-                    }
-                    Player1
-                }
+                Player1 => Player2,
+                Player2 => Player1,
             };
+
+            let mut child = DecisionTree::new(next_state, next_player);
+            child.deepen(evaluator, remaining_levels - 1, player);
+
+            if let Some(value) = child.static_value {
+                if self.player == player {
+                    self.alpha = max(value, self.alpha);
+                    self.static_value = Some(self.alpha);
+                } else {
+                    self.beta = min(value, self.beta);
+                    self.static_value = Some(self.beta);
+                }
+            }
+
+            self.children.insert(next_move, Box::new(child));
 
             if self.alpha >= self.beta {
                 break;
             }
-
-            let mut child = DecisionTree::new(next_state, next_player);
-            child.deepen_aux(evaluator, remaining_levels - 1);
-
-            self.children.insert(next_move, Box::new(child));
         }
+
+        // ...
     }
 
     pub fn decide(&self) -> Coord {
