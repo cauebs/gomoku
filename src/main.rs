@@ -2,12 +2,15 @@
 extern crate failure_derive;
 extern crate failure;
 extern crate rand;
+extern crate rayon;
 
-mod ai;
 mod board;
 mod coordinates;
 mod game;
+
+mod ai;
 mod players;
+mod tree;
 
 #[cfg(test)]
 mod tests;
@@ -16,7 +19,10 @@ use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Human, SmartBot};
 
 fn main() {
+    let human = Human::new("cauebs");
+
     let bot = SmartBot::new(
+        PlayerIndicator::Player2,
         |b| {
             let mut static_value = 0;
             for (i, row) in b.iter().enumerate() {
@@ -26,11 +32,12 @@ fn main() {
                     }
                 }
             }
-            static_value as f64
+            static_value as i32
         },
-        10,
+        2,
     );
-    let mut game = Game::new(Human::new("cauebs"), bot);
+
+    let mut game = Game::new(human, bot);
 
     match game.play_to_end() {
         Victory(p) => println!("{:?} has won!", p),

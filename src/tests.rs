@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use game::{possible_moves, EndGame::*, Game, PlayerIndicator::*};
+use game::{EndGame::*, Game, PlayerIndicator::*};
 use players::TestBot;
 
 #[test]
@@ -79,13 +79,13 @@ fn test_possible_moves() {
         }
     }
 
-    assert_eq!(possible_moves(&game.board), expected);
+    assert_eq!(game.board.possible_moves(), expected);
 
     for (p1_move, p2_move) in p1_moves.iter().zip(&p2_moves) {
         for p in [p1_move, p2_move].iter() {
             game.play_turns(1);
             expected.remove(p);
-            assert_eq!(possible_moves(&game.board), expected);
+            assert_eq!(game.board.possible_moves(), expected);
         }
     }
 }

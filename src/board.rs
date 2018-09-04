@@ -1,6 +1,7 @@
 use failure;
 
 use std::{
+    collections::HashSet,
     fmt,
     ops::{Deref, DerefMut},
 };
@@ -45,6 +46,20 @@ impl Board {
 
         self[coords.0][coords.1] = Some(player);
         Ok(())
+    }
+
+    pub fn possible_moves(&self) -> HashSet<Coord> {
+        let mut result = HashSet::new();
+
+        for (i, row) in self.iter().enumerate() {
+            for (j, cell) in row.iter().enumerate() {
+                if let None = cell {
+                    result.insert((i, j));
+                };
+            }
+        }
+
+        result
     }
 }
 
