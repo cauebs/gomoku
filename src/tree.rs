@@ -81,7 +81,8 @@ impl DecisionTree {
     }
 
     pub fn decide(&self) -> Coord {
-        *self.children
+        *self
+            .children
             .iter()
             .filter(|(_, subtree)| subtree.static_value.is_some())
             .max_by_key(|(_, subtree)| subtree.static_value.unwrap())

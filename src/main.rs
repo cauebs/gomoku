@@ -23,39 +23,42 @@ use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Human, RandomBot, SmartBot};
 
 fn heuristic(board: &Board, player: PlayerIndicator) -> i32 {
-    use PlayerIndicator::{Player1, Player2};
     const ci: i32 = 100000;
     const cp: i32 = 100;
     const cj: i32 = -1;
-
-    let s = board;
 
     let mut scores = HashMap::new();
 
     let mut combo_player = (None, 0);
 
-    for (i, row) in board.iter().enumerate() {
-        for (j, cell) in row.iter().enumerate() {
+    // TODO: For each cell, check possibilities and multiply.
+    //       Free spaces to fulfill game = good.
+    //       Each friendly-filled space = +good.
+    //       Not enough spaces = zero.
+    for (_, row) in board.iter().enumerate() {
+        for (_, cell) in row.iter().enumerate() {
             if let Some(cell_player) = cell {
                 combo_player = match combo_player {
-                    (Some(comber), streak) if comber == cell_player => (Some(comber), streak + 1),
+                    (Some(comber), streak) if comber == cell_player =>
+                        (Some(comber), streak + 1),
                     (Some(comber), streak) => {
-                        scores.entry(cell_player).or_insert(0);
-                        scores.entry(cell_player).and_modify(|yay| *yay += streak);
+                        *scores.entry(cell_player).or_insert(0) += streak * streak * cp;
                         (Some(comber), 0)
                     }
-                    (None, streak) => (Some(cell_player), streak),
+                    (None, streak) => (Some(cell_player), streak * cp),
                 };
             }
         }
     }
 
-    *scores.entry(&player).or_insert(0) as i32
+    let score_p1 = *scores.entry(&player).or_insert(0) as i32;
+
+    score_p1
 }
 
 fn main() {
     let human = Human::new("cauebs");
-    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 2);
+    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 3);
     let mut game = Game::new(human, bot);
 
     match game.play_to_end() {
