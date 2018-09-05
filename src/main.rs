@@ -4,6 +4,7 @@ extern crate failure;
 extern crate rand;
 extern crate rayon;
 
+mod axes;
 mod board;
 mod coordinates;
 mod game;
@@ -19,7 +20,7 @@ use std::collections::HashMap;
 
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
-use players::{RandomBot, SmartBot};
+use players::{Human, RandomBot, SmartBot};
 
 fn heuristic(board: &Board, player: PlayerIndicator) -> i32 {
     use PlayerIndicator::{Player1, Player2};
@@ -37,17 +38,13 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> i32 {
         for (j, cell) in row.iter().enumerate() {
             if let Some(cell_player) = cell {
                 combo_player = match combo_player {
-                    (Some(comber), streak) if comber == cell_player => {
-                        (Some(comber), streak + 1)
-                    },
+                    (Some(comber), streak) if comber == cell_player => (Some(comber), streak + 1),
                     (Some(comber), streak) => {
                         scores.entry(cell_player).or_insert(0);
                         scores.entry(cell_player).and_modify(|yay| *yay += streak);
                         (Some(comber), 0)
-                    },
-                    (None, streak) => {
-                        (Some(cell_player), streak)
                     }
+                    (None, streak) => (Some(cell_player), streak),
                 };
             }
         }
@@ -57,7 +54,7 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> i32 {
 }
 
 fn main() {
-    let human = RandomBot;
+    let human = Human::new("cauebs");
     let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 2);
     let mut game = Game::new(human, bot);
 
