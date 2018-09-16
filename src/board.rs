@@ -1,7 +1,6 @@
 use failure;
 
 use std::{
-    collections::HashSet,
     fmt,
     ops::{Deref, DerefMut},
 };
@@ -48,18 +47,53 @@ impl Board {
         Ok(())
     }
 
-    pub fn possible_moves(&self) -> HashSet<Coord> {
-        let mut result = HashSet::new();
+    pub fn possible_moves<'a>(&'a self) -> PossibleMoves<'a> {
+        PossibleMoves::new(self)
+    }
+}
 
-        for (i, row) in self.iter().enumerate() {
-            for (j, cell) in row.iter().enumerate() {
-                if let None = cell {
-                    result.insert((i, j));
-                };
+pub struct PossibleMoves<'a> {
+    board: &'a Board,
+    coord: Coord,
+}
+
+impl<'a> PossibleMoves<'a> {
+    fn new(board: &'a Board) -> Self {
+        PossibleMoves {
+            board,
+            coord: (0, 0),
+        }
+    }
+}
+
+impl<'a> Iterator for PossibleMoves<'a> {
+    type Item = Coord;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (mut i, mut j) = self.coord;
+
+        if i >= self.board.height() {
+            return None;
+        }
+
+        while self.board[i][j].is_some() {
+            if j < self.board.width() - 1 {
+                j += 1
+            } else if i < self.board.height() - 1 {
+                i += 1;
+                j = 0;
+            } else {
+                return None;
             }
         }
 
-        result
+        self.coord = if j < self.board.width() - 1 {
+            (i, j + 1)
+        } else {
+            (i + 1, 0)
+        };
+
+        Some((i, j))
     }
 }
 
