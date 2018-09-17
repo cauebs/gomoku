@@ -30,6 +30,28 @@ impl<'a> Axis<'a> {
             cell_index: 0,
         }
     }
+
+    pub fn streaks(self, player: PlayerIndicator) -> Vec<Vec<Coord>> {
+        let mut current = Vec::new();
+        let mut streaks = Vec::new();
+
+        for (coord, cell) in self {
+            if cell == Some(player) {
+                current.push(coord);
+            } else {
+                if !current.is_empty() {
+                    streaks.push(current);
+                }
+                current = Vec::new();
+            }
+        }
+
+        if !current.is_empty() {
+            streaks.push(current);
+        }
+
+        streaks
+    }
 }
 
 impl<'a> Iterator for Axis<'a> {
@@ -76,6 +98,10 @@ impl<'a> Axes<'a> {
             axis_index: 0,
             axis: Some(Axis::new(board, Direction::Horizontal, 0)),
         }
+    }
+
+    pub fn streaks(self, player: PlayerIndicator) -> Vec<Vec<Coord>> {
+        self.map(|axis| axis.streaks(player)).flatten().collect()
     }
 }
 

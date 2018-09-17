@@ -32,8 +32,7 @@ where
         mut beta: isize,
         maximizing: bool,
     ) -> (isize, Option<Coord>) {
-        // TODO: check if it's a leaf node
-        if depth == 0 {
+        if depth == 0 || board.possible_moves().next() == None {
             return ((self.static_evaluator)(&board, self.player_id), None);
         }
 
