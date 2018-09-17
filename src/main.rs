@@ -15,12 +15,14 @@ mod players;
 #[cfg(test)]
 mod tests;
 
+use std::cmp::min;
+
 use axes::Axes;
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Player, Human, RandomBot, SmartBot};
 
-const SCORE_PER_SPACE: isize = 1;
+const SCORE_PER_SPACE: u32 = 1;
 const SCORE_PER_MY_SPACE: u32 = 4;
 
 fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
@@ -42,8 +44,12 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
                 None => spaces += 1,
             }
 
+            if my_spaces == 5 {
+                return isize::max_value();
+            }
+
             if spaces + my_spaces > 0 {
-                let plus_score = SCORE_PER_SPACE * (5 - spaces)
+                let plus_score = (5 - min(5, spaces)) * SCORE_PER_SPACE as isize
                     + my_spaces.pow(SCORE_PER_MY_SPACE);
                 score += plus_score;
             }
@@ -88,21 +94,29 @@ where
     println!("{} ({} turns)", game.board, game.moves.len());
 }
 
-fn main() {
-    let stub_test = false;
-    let use_human = true;
-    let to_end = true;
+enum TestType {
+    HS,
+    RS,
+    STUB,
+}
 
-    if stub_test {
-        run_stub();
-        return;
+fn main() {
+    let test_type = TestType::RS;
+    let to_end = true;
+    let depth = 3;
+
+    match test_type {
+        TestType::STUB => {
+            run_stub();
+            return;
+        }
+        _ => {},
     }
 
-    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 3);
-
-    if use_human {
-        run_test(Human::new("cauebs"), bot, to_end);
-    } else {
-        run_test(RandomBot{}, bot, to_end);
+    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, depth);
+    match test_type {
+        TestType::HS => run_test(Human::new("cauebs"), bot, to_end),
+        TestType::RS => run_test(RandomBot{}, bot, to_end),
+        _ => {},
     }
 }
