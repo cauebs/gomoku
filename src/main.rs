@@ -11,7 +11,6 @@ mod game;
 
 mod ai;
 mod players;
-mod tree;
 
 #[cfg(test)]
 mod tests;

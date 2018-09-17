@@ -1,9 +1,6 @@
-use std::default::Default;
-
 use board::{Board, Coord};
 use game::PlayerIndicator;
 use players::Player;
-use tree::DecisionTree;
 
 #[derive(Debug)]
 pub struct SmartBot<F>
@@ -12,7 +9,6 @@ where
 {
     player_id: PlayerIndicator,
     static_evaluator: F,
-    decision_tree: DecisionTree,
     recursion_limit: u32,
 }
 
@@ -21,15 +17,40 @@ where
     F: Fn(&Board, PlayerIndicator) -> i32,
 {
     pub fn new(player_id: PlayerIndicator, static_evaluator: F, recursion_limit: u32) -> Self {
-        let mut tree = DecisionTree::default();
-        tree.deepen(&static_evaluator, recursion_limit, player_id);
-
         Self {
             player_id,
             static_evaluator,
-            decision_tree: tree,
             recursion_limit,
         }
+    }
+
+    fn minimax(&mut self, board: &Board, depth: u32, maximizing: bool) -> (i32, Option<Coord>) {
+        if depth == 0 {
+            return ((self.static_evaluator)(&board, self.player_id), None);
+        }
+
+        let mut best_move = None;
+        let mut best_value = if maximizing {
+            i32::min_value()
+        } else {
+            i32::max_value()
+        };
+
+        for m in board.possible_moves() {
+            let mut child_board = board.clone();
+            child_board
+                .make_move(self.player_id, m)
+                .expect("AI thinks it can make a move it actually cannot!");
+
+            let (value, _) = self.minimax(&child_board, depth - 1, !maximizing);
+
+            if (value > best_value && maximizing) || value < best_value {
+                best_value = value;
+                best_move = Some(m);
+            }
+        }
+
+        (best_value, best_move)
     }
 }
 
@@ -37,19 +58,9 @@ impl<F> Player for SmartBot<F>
 where
     F: Fn(&Board, PlayerIndicator) -> i32,
 {
-    fn decide(&mut self, _board: &Board, last_move: Option<Coord>) -> Coord {
-        if let Some(last_move) = last_move {
-            self.decision_tree = self
-                .decision_tree
-                .extract_subtree(&last_move)
-                .expect("The last move wasn't predicted by the decision tree.");
-        }
-
-        self.decision_tree
-            .deepen(&self.static_evaluator, self.recursion_limit, self.player_id);
-
-        let next_move = self.decision_tree.decide();
-        self.decision_tree = self.decision_tree.extract_subtree(&next_move).unwrap();
-        next_move
+    fn decide(&mut self, board: &Board, _last_move: Option<Coord>) -> Coord {
+        let depth = self.recursion_limit;
+        let m = self.minimax(board, depth, true).1;
+        m.expect("The only winning move is not to play.")
     }
 }
