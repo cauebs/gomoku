@@ -15,55 +15,94 @@ mod players;
 #[cfg(test)]
 mod tests;
 
-use std::collections::HashMap;
-
+use axes::Axes;
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
-use players::{Human, RandomBot, SmartBot};
+use players::{Player, Human, RandomBot, SmartBot};
 
-fn heuristic(board: &Board, player: PlayerIndicator) -> i32 {
-    const ci: i32 = 100000;
-    const cp: i32 = 100;
-    const cj: i32 = -1;
+const SCORE_PER_SPACE: isize = 1;
+const SCORE_PER_MY_SPACE: u32 = 4;
 
-    let mut scores = HashMap::new();
+fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
+    let mut score = 0;
 
-    let mut combo_player = (None, 0);
+    for axis in Axes::new(&board) {
+        let mut spaces = 0;
+        let mut my_spaces = 0isize;
+        for cell in axis {
+            let (i, j) = cell.0;
+            match board[i][j] {
+                Some(cell_player) if cell_player == player => {
+                    my_spaces += 1;
+                },
+                Some(_) => {
+                    spaces = 0;
+                    my_spaces = 0;
+                },
+                None => spaces += 1,
+            }
 
-    // TODO: For each cell, check possibilities and multiply.
-    //       Free spaces to fulfill game = good.
-    //       Each friendly-filled space = +good.
-    //       Not enough spaces = zero.
-    for (_, row) in board.iter().enumerate() {
-        for (_, cell) in row.iter().enumerate() {
-            if let Some(cell_player) = cell {
-                combo_player = match combo_player {
-                    (Some(comber), streak) if comber == cell_player =>
-                        (Some(comber), streak + 1),
-                    (Some(comber), streak) => {
-                        *scores.entry(cell_player).or_insert(0) += streak * streak * cp;
-                        (Some(comber), 0)
-                    }
-                    (None, streak) => (Some(cell_player), streak * cp),
-                };
+            if spaces + my_spaces > 0 {
+                let plus_score = SCORE_PER_SPACE * (5 - spaces)
+                    + my_spaces.pow(SCORE_PER_MY_SPACE);
+                score += plus_score;
             }
         }
     }
 
-    let score_p1 = *scores.entry(&player).or_insert(0) as i32;
-
-    score_p1
+    score
 }
 
-fn main() {
-    let human = Human::new("cauebs");
-    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 3);
-    let mut game = Game::new(human, bot);
+#[allow(unused)]
+fn run_stub() {
+    use PlayerIndicator::*;
 
-    match game.play_to_end() {
-        Victory(p) => println!("{:?} has won!", p),
-        Draw => println!("It's a draw!"),
+    let mut board = Board::default();
+    board.make_move(Player2, (0,0));
+    println!("{}\nScore: {}", board, heuristic(&board, Player2));
+    board.make_move(Player2, (0,1));
+    board.make_move(Player2, (0,2));
+    board.make_move(Player2, (0,3));
+    println!("{}\nScore: {}", board, heuristic(&board, Player2));
+}
+
+fn run_test<P1, P2>(player1: P1, player2: P2, to_end: bool)
+where
+    P1: Player,
+    P2: Player,
+{
+    let mut game = Game::new(player1, player2);
+
+    let result = if to_end {
+        Some(game.play_to_end())
+    } else {
+        game.play_turns(10)
+    };
+
+    match result {
+        Some(Victory(p)) => println!("{:?} has won!", p),
+        Some(Draw) => println!("It's a draw!"),
+        None => println!("No one won."),
     };
 
     println!("{} ({} turns)", game.board, game.moves.len());
+}
+
+fn main() {
+    let stub_test = false;
+    let use_human = true;
+    let to_end = true;
+
+    if stub_test {
+        run_stub();
+        return;
+    }
+
+    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, 3);
+
+    if use_human {
+        run_test(Human::new("cauebs"), bot, to_end);
+    } else {
+        run_test(RandomBot{}, bot, to_end);
+    }
 }

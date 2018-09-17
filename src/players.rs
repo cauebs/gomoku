@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use rand::{thread_rng, Rng};
 
 use std::io::{stdin, stdout, Write};

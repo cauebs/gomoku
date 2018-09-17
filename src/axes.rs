@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::mem::replace;
 
 use board::{Board, Coord};
