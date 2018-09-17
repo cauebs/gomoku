@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::mem::replace;
+use std::{collections::HashSet, mem::replace};
 
 use board::{Board, Coord};
 use game::PlayerIndicator;
@@ -14,6 +14,7 @@ enum Direction {
     TopRightDiagonal,
 }
 
+#[derive(Clone)]
 pub struct Axis<'a> {
     board: &'a Board,
     direction: Direction,
@@ -31,23 +32,62 @@ impl<'a> Axis<'a> {
         }
     }
 
-    pub fn streaks(self, player: PlayerIndicator) -> Vec<Vec<Coord>> {
+    pub fn streaks(self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
         let mut current = Vec::new();
-        let mut streaks = Vec::new();
+        let mut streaks = HashSet::new();
 
         for (coord, cell) in self {
             if cell == Some(player) {
                 current.push(coord);
-            } else {
-                if !current.is_empty() {
-                    streaks.push(current);
+                continue;
+            }
+
+            if !current.is_empty() {
+                streaks.insert(current);
+            }
+            current = Vec::new();
+        }
+
+        if !current.is_empty() {
+            streaks.insert(current);
+        }
+
+        streaks
+    }
+
+    pub fn streaks_with_room(mut self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
+        let mut preceding_spaces = 0;
+        let mut current = Vec::new();
+        let mut streaks = HashSet::new();
+
+        while let Some((coord, cell)) = self.next() {
+            if cell == Some(player) {
+                current.push(coord);
+                continue;
+            }
+            if !current.is_empty() {
+                if current.len() + preceding_spaces >= 5 {
+                    streaks.insert(current);
+                } else {
+                    let axis = self.clone();
+                    let succeding_spaces = axis.take_while(|(_, cell)| cell.is_none()).count();
+                    if current.len() + preceding_spaces + succeding_spaces >= 5 {
+                        streaks.insert(current);
+                    }
                 }
-                current = Vec::new();
+            }
+
+            current = Vec::new();
+
+            if cell.is_none() {
+                preceding_spaces += 1;
+            } else {
+                preceding_spaces = 0;
             }
         }
 
         if !current.is_empty() {
-            streaks.push(current);
+            streaks.insert(current);
         }
 
         streaks
@@ -100,8 +140,14 @@ impl<'a> Axes<'a> {
         }
     }
 
-    pub fn streaks(self, player: PlayerIndicator) -> Vec<Vec<Coord>> {
+    pub fn streaks(self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
         self.map(|axis| axis.streaks(player)).flatten().collect()
+    }
+
+    pub fn streaks_with_room(self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
+        self.map(|axis| axis.streaks_with_room(player))
+            .flatten()
+            .collect()
     }
 }
 
