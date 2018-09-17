@@ -79,13 +79,19 @@ fn test_possible_moves() {
         }
     }
 
-    assert_eq!(game.board.possible_moves(), expected);
+    assert_eq!(
+        game.board.possible_moves().collect::<HashSet<_>>(),
+        expected
+    );
 
     for (p1_move, p2_move) in p1_moves.iter().zip(&p2_moves) {
         for p in [p1_move, p2_move].iter() {
             game.play_turns(1);
             expected.remove(p);
-            assert_eq!(game.board.possible_moves(), expected);
+            assert_eq!(
+                game.board.possible_moves().collect::<HashSet<_>>(),
+                expected
+            );
         }
     }
 }

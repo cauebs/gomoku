@@ -47,7 +47,7 @@ impl Board {
         Ok(())
     }
 
-    pub fn possible_moves<'a>(&'a self) -> PossibleMoves<'a> {
+    pub fn possible_moves(&self) -> PossibleMoves {
         PossibleMoves::new(self)
     }
 }
