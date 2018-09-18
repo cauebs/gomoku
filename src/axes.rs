@@ -5,7 +5,7 @@ use board::{Board, Coord};
 use game::PlayerIndicator;
 
 #[derive(Clone, Copy)]
-enum Direction {
+pub enum Direction {
     Horizontal,
     Vertical,
     BottomLeftDiagonal,
@@ -75,9 +75,9 @@ impl<'a> Axis<'a> {
                         streaks.insert(current);
                     }
                 }
-            }
 
-            current = Vec::new();
+                current = Vec::new();
+            }
 
             if cell.is_none() {
                 preceding_spaces += 1;
@@ -87,7 +87,15 @@ impl<'a> Axis<'a> {
         }
 
         if !current.is_empty() {
-            streaks.insert(current);
+            if current.len() + preceding_spaces >= 5 {
+                streaks.insert(current);
+            } else {
+                let axis = self.clone();
+                let succeding_spaces = axis.take_while(|(_, cell)| cell.is_none()).count();
+                if current.len() + preceding_spaces + succeding_spaces >= 5 {
+                    streaks.insert(current);
+                }
+            }
         }
 
         streaks
@@ -101,15 +109,15 @@ impl<'a> Iterator for Axis<'a> {
         use self::Direction::*;
 
         let axis_index = self.axis_index as isize;
-        let cell_index = self.cell_index as isize - 1;
+        let cell_index = self.cell_index as isize;
 
         let (i, j) = match self.direction {
             Horizontal => (axis_index, cell_index),
             Vertical => (cell_index, axis_index),
             BottomLeftDiagonal => (14 - axis_index + cell_index, cell_index),
             TopLeftDiagonal => (axis_index - cell_index, cell_index),
-            TopRightDiagonal => (axis_index + cell_index, 14 - cell_index),
-            BottomRightDiagonal => (14 - axis_index - cell_index, 14 - cell_index),
+            TopRightDiagonal => (cell_index, axis_index + cell_index + 1),
+            BottomRightDiagonal => (14 - cell_index, axis_index + cell_index + 1),
         };
 
         self.cell_index += 1;

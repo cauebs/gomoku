@@ -18,7 +18,7 @@ mod tests;
 use axes::Axes;
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
-use players::{Player, Human, RandomBot, SmartBot};
+use players::{Human, Player, RandomBot, SmartBot};
 
 use PlayerIndicator::*;
 
@@ -31,16 +31,11 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
         for axis in Axes::new(&board) {
             for streak in axis.streaks_with_room(player) {
                 match streak.len() {
-                    x if x == 1 => {
-                        continue;
+                    2...4 => {
+                        score += streak.len().pow(SCORE_PER_MY_SPACE) as isize;
                     }
-                    x if x < 5 => {
-                        score += (streak.len() as isize).pow(SCORE_PER_MY_SPACE);
-                    }
-                    x if x == 5 => {
-                        return isize::max_value() / 2;
-                    }
-                    _ => {},
+                    5 => return isize::max_value(),
+                    _ => {}
                 }
             }
         }
@@ -48,12 +43,8 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
         score
     }
 
-    let (p1, p2) = match player {
-        x if x == Player1 => (Player1, Player2),
-        _ => (Player2, Player1),
-    };
-
-    score_for_player(&board, p1) - score_for_player(&board, p2)
+    let opponent = if player == Player1 { Player2 } else { Player1 };
+    score_for_player(&board, player) - score_for_player(&board, opponent)
 }
 
 #[allow(unused)]
@@ -100,7 +91,7 @@ enum TestType {
 }
 
 fn main() {
-    let test_type = TestType::HS;
+    let test_type = TestType::RS;
     let to_end = true;
     let depth = 2;
 
@@ -109,13 +100,13 @@ fn main() {
             run_stub();
             return;
         }
-        _ => {},
+        _ => {}
     }
 
     let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, depth);
     match test_type {
         TestType::HS => run_test(Human::new("cauebs"), bot, to_end),
-        TestType::RS => run_test(RandomBot{}, bot, to_end),
-        _ => {},
+        TestType::RS => run_test(RandomBot {}, bot, to_end),
+        _ => {}
     }
 }
