@@ -101,7 +101,7 @@ impl<'a> Iterator for Axis<'a> {
         use self::Direction::*;
 
         let axis_index = self.axis_index as isize;
-        let cell_index = self.cell_index as isize;
+        let cell_index = self.cell_index as isize - 1;
 
         let (i, j) = match self.direction {
             Horizontal => (axis_index, cell_index),

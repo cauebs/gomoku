@@ -15,60 +15,58 @@ mod players;
 #[cfg(test)]
 mod tests;
 
-use std::cmp::min;
-
 use axes::Axes;
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
 use players::{Player, Human, RandomBot, SmartBot};
 
-const SCORE_PER_SPACE: u32 = 1;
-const SCORE_PER_MY_SPACE: u32 = 4;
+use PlayerIndicator::*;
+
+const SCORE_PER_MY_SPACE: u32 = 10;
 
 fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
-    let mut score = 0;
+    fn score_for_player(board: &Board, player: PlayerIndicator) -> isize {
+        let mut score = 0;
 
-    for axis in Axes::new(&board) {
-        let mut spaces = 0;
-        let mut my_spaces = 0isize;
-        for cell in axis {
-            let (i, j) = cell.0;
-            match board[i][j] {
-                Some(cell_player) if cell_player == player => {
-                    my_spaces += 1;
-                },
-                Some(_) => {
-                    spaces = 0;
-                    my_spaces = 0;
-                },
-                None => spaces += 1,
-            }
-
-            if my_spaces == 5 {
-                return isize::max_value();
-            }
-
-            if spaces + my_spaces > 0 {
-                let plus_score = (5 - min(5, spaces)) * SCORE_PER_SPACE as isize
-                    + my_spaces.pow(SCORE_PER_MY_SPACE);
-                score += plus_score;
+        for axis in Axes::new(&board) {
+            for streak in axis.streaks_with_room(player) {
+                match streak.len() {
+                    x if x == 1 => {
+                        continue;
+                    }
+                    x if x < 5 => {
+                        score += (streak.len() as isize).pow(SCORE_PER_MY_SPACE);
+                    }
+                    x if x == 5 => {
+                        return isize::max_value() / 2;
+                    }
+                    _ => {},
+                }
             }
         }
+
+        score
     }
 
-    score
+    let (p1, p2) = match player {
+        x if x == Player1 => (Player1, Player2),
+        _ => (Player2, Player1),
+    };
+
+    score_for_player(&board, p1) - score_for_player(&board, p2)
 }
 
 #[allow(unused)]
 fn run_stub() {
-    use PlayerIndicator::*;
-
     let mut board = Board::default();
-    board.make_move(Player2, (0,0));
     println!("{}\nScore: {}", board, heuristic(&board, Player2));
-    board.make_move(Player2, (0,1));
-    board.make_move(Player2, (0,2));
-    board.make_move(Player2, (0,3));
+    board.make_move(Player2, (0, 0));
+    println!("{}\nScore: {}", board, heuristic(&board, Player2));
+    board.make_move(Player2, (0, 1));
+    board.make_move(Player2, (0, 2));
+    board.make_move(Player2, (0, 3));
+    println!("{}\nScore: {}", board, heuristic(&board, Player2));
+    board.make_move(Player2, (0, 4));
     println!("{}\nScore: {}", board, heuristic(&board, Player2));
 }
 
@@ -94,6 +92,7 @@ where
     println!("{} ({} turns)", game.board, game.moves.len());
 }
 
+#[allow(unused)]
 enum TestType {
     HS,
     RS,
@@ -101,9 +100,9 @@ enum TestType {
 }
 
 fn main() {
-    let test_type = TestType::RS;
+    let test_type = TestType::HS;
     let to_end = true;
-    let depth = 3;
+    let depth = 2;
 
     match test_type {
         TestType::STUB => {
