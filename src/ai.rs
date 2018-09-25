@@ -16,7 +16,11 @@ impl<F> SmartBot<F>
 where
     F: Fn(&Board, PlayerIndicator) -> isize,
 {
-    pub fn new(player_id: PlayerIndicator, static_evaluator: F, recursion_limit: u32) -> Self {
+    pub fn new(
+        player_id: PlayerIndicator,
+        static_evaluator: F,
+        recursion_limit: u32,
+    ) -> Self {
         Self {
             player_id,
             static_evaluator,
@@ -49,7 +53,13 @@ where
                 .make_move(self.player_id, m)
                 .expect("AI thinks it can make a move it actually cannot!");
 
-            let (value, _) = self.minimax_aux(&child_board, depth - 1, alpha, beta, !maximizing);
+            let (value, _) = self.minimax_aux(
+                &child_board,
+                depth - 1,
+                alpha,
+                beta,
+                !maximizing,
+            );
 
             if (value > best_value && maximizing) || value < best_value {
                 best_value = value;

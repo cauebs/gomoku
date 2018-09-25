@@ -55,7 +55,10 @@ impl<'a> Axis<'a> {
         streaks
     }
 
-    pub fn streaks_with_room(mut self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
+    pub fn streaks_with_room(
+        mut self,
+        player: PlayerIndicator,
+    ) -> HashSet<Vec<Coord>> {
         let mut preceding_spaces = 0;
         let mut current = Vec::new();
         let mut streaks = HashSet::new();
@@ -70,8 +73,10 @@ impl<'a> Axis<'a> {
                     streaks.insert(current);
                 } else {
                     let axis = self.clone();
-                    let succeding_spaces = axis.take_while(|(_, cell)| cell.is_none()).count();
-                    if current.len() + preceding_spaces + succeding_spaces >= 5 {
+                    let succeding_spaces =
+                        axis.take_while(|(_, cell)| cell.is_none()).count();
+                    if current.len() + preceding_spaces + succeding_spaces >= 5
+                    {
                         streaks.insert(current);
                     }
                 }
@@ -91,7 +96,8 @@ impl<'a> Axis<'a> {
                 streaks.insert(current);
             } else {
                 let axis = self.clone();
-                let succeding_spaces = axis.take_while(|(_, cell)| cell.is_none()).count();
+                let succeding_spaces =
+                    axis.take_while(|(_, cell)| cell.is_none()).count();
                 if current.len() + preceding_spaces + succeding_spaces >= 5 {
                     streaks.insert(current);
                 }
@@ -117,7 +123,9 @@ impl<'a> Iterator for Axis<'a> {
             BottomLeftDiagonal => (14 - axis_index + cell_index, cell_index),
             TopLeftDiagonal => (axis_index - cell_index, cell_index),
             TopRightDiagonal => (cell_index, axis_index + cell_index + 1),
-            BottomRightDiagonal => (14 - cell_index, axis_index + cell_index + 1),
+            BottomRightDiagonal => {
+                (14 - cell_index, axis_index + cell_index + 1)
+            }
         };
 
         self.cell_index += 1;
@@ -152,7 +160,10 @@ impl<'a> Axes<'a> {
         self.map(|axis| axis.streaks(player)).flatten().collect()
     }
 
-    pub fn streaks_with_room(self, player: PlayerIndicator) -> HashSet<Vec<Coord>> {
+    pub fn streaks_with_room(
+        self,
+        player: PlayerIndicator,
+    ) -> HashSet<Vec<Coord>> {
         self.map(|axis| axis.streaks_with_room(player))
             .flatten()
             .collect()

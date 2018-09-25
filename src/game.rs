@@ -43,8 +43,12 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
 
         loop {
             let (coords, next_turn) = match self.current_turn {
-                Player1 => (self.player1.decide(&self.board, last_move), Player2),
-                Player2 => (self.player2.decide(&self.board, last_move), Player1),
+                Player1 => {
+                    (self.player1.decide(&self.board, last_move), Player2)
+                }
+                Player2 => {
+                    (self.player2.decide(&self.board, last_move), Player1)
+                }
             };
 
             if let Err(e) = self.board.make_move(self.current_turn, coords) {
@@ -149,7 +153,11 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         None
     }
 
-    fn diagonal_cell_search(&self, coords: (usize, usize), reverse: bool) -> Option<EndGame> {
+    fn diagonal_cell_search(
+        &self,
+        coords: (usize, usize),
+        reverse: bool,
+    ) -> Option<EndGame> {
         let (mut i, mut j) = (coords.0, coords.1);
 
         let tracking = self.board[i][j]?;
@@ -180,7 +188,8 @@ impl<P1: Player, P2: Player> Game<P1, P2> {
         for i in 0..height + 1 - VICTORY_STREAK {
             for j in 0..width {
                 if j <= width - VICTORY_STREAK {
-                    if let Some(end) = self.diagonal_cell_search((i, j), false) {
+                    if let Some(end) = self.diagonal_cell_search((i, j), false)
+                    {
                         return Some(end);
                     }
                 }

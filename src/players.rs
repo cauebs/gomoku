@@ -9,7 +9,11 @@ use board::Board;
 use coordinates::coordinates_from_hex_str;
 
 pub trait Player {
-    fn decide(&mut self, board: &Board, last_move: Option<(usize, usize)>) -> (usize, usize);
+    fn decide(
+        &mut self,
+        board: &Board,
+        last_move: Option<(usize, usize)>,
+    ) -> (usize, usize);
 }
 
 #[derive(Debug)]
@@ -22,7 +26,11 @@ impl Human {
 }
 
 impl Player for Human {
-    fn decide(&mut self, board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
+    fn decide(
+        &mut self,
+        board: &Board,
+        _last_move: Option<(usize, usize)>,
+    ) -> (usize, usize) {
         loop {
             println!("\n{}", board);
 
@@ -44,7 +52,11 @@ impl Player for Human {
 pub struct RandomBot;
 
 impl Player for RandomBot {
-    fn decide(&mut self, _board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
+    fn decide(
+        &mut self,
+        _board: &Board,
+        _last_move: Option<(usize, usize)>,
+    ) -> (usize, usize) {
         let mut rng = thread_rng();
         (rng.gen_range(0, 15), rng.gen_range(0, 15))
     }
@@ -62,7 +74,11 @@ impl TestBot {
 }
 
 impl Player for TestBot {
-    fn decide(&mut self, _board: &Board, _last_move: Option<(usize, usize)>) -> (usize, usize) {
+    fn decide(
+        &mut self,
+        _board: &Board,
+        _last_move: Option<(usize, usize)>,
+    ) -> (usize, usize) {
         self.moves.pop().expect("Not enough moves.")
     }
 }

@@ -18,13 +18,13 @@ mod tests;
 use axes::Axes;
 use board::Board;
 use game::{EndGame::*, Game, PlayerIndicator};
-use players::{Human, Player, RandomBot, SmartBot};
+use players::{Human, SmartBot};
 
 use PlayerIndicator::*;
 
-const SCORE_PER_MY_SPACE: u32 = 10;
-
 fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
+    const SCORE_PER_MY_SPACE: u32 = 10;
+
     fn score_for_player(board: &Board, player: PlayerIndicator) -> isize {
         let mut score = 0;
 
@@ -47,66 +47,17 @@ fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
     score_for_player(&board, player) - score_for_player(&board, opponent)
 }
 
-#[allow(unused)]
-fn run_stub() {
-    let mut board = Board::default();
-    println!("{}\nScore: {}", board, heuristic(&board, Player2));
-    board.make_move(Player2, (0, 0));
-    println!("{}\nScore: {}", board, heuristic(&board, Player2));
-    board.make_move(Player2, (0, 1));
-    board.make_move(Player2, (0, 2));
-    board.make_move(Player2, (0, 3));
-    println!("{}\nScore: {}", board, heuristic(&board, Player2));
-    board.make_move(Player2, (0, 4));
-    println!("{}\nScore: {}", board, heuristic(&board, Player2));
-}
+fn main() {
+    let depth = 2;
 
-fn run_test<P1, P2>(player1: P1, player2: P2, to_end: bool)
-where
-    P1: Player,
-    P2: Player,
-{
+    let player1 = Human::new("Human Player");
+    let player2 = SmartBot::new(Player2, heuristic, depth);
     let mut game = Game::new(player1, player2);
 
-    let result = if to_end {
-        Some(game.play_to_end())
-    } else {
-        game.play_turns(10)
-    };
-
-    match result {
-        Some(Victory(p)) => println!("{:?} has won!", p),
-        Some(Draw) => println!("It's a draw!"),
-        None => println!("No one won."),
+    match game.play_to_end() {
+        Victory(p) => println!("{:?} has won!", p),
+        Draw => println!("It's a draw!"),
     };
 
     println!("{} ({} turns)", game.board, game.moves.len());
-}
-
-#[allow(unused)]
-enum TestType {
-    HS,
-    RS,
-    STUB,
-}
-
-fn main() {
-    let test_type = TestType::RS;
-    let to_end = true;
-    let depth = 2;
-
-    match test_type {
-        TestType::STUB => {
-            run_stub();
-            return;
-        }
-        _ => {}
-    }
-
-    let bot = SmartBot::new(PlayerIndicator::Player2, heuristic, depth);
-    match test_type {
-        TestType::HS => run_test(Human::new("cauebs"), bot, to_end),
-        TestType::RS => run_test(RandomBot {}, bot, to_end),
-        _ => {}
-    }
 }

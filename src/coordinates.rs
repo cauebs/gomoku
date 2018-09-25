@@ -12,7 +12,9 @@ pub fn coordinates_from_str(s: &str) -> Result<(usize, usize), failure::Error> {
     Ok((x, y))
 }
 
-pub fn coordinates_from_hex_str(s: &str) -> Result<(usize, usize), failure::Error> {
+pub fn coordinates_from_hex_str(
+    s: &str,
+) -> Result<(usize, usize), failure::Error> {
     let mut it = s.split(',');
 
     let x = it.next().ok_or(ParseCoordinatesError)?;
