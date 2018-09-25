@@ -1,0 +1,104 @@
+%-------------------------------------------------------------------------------
+\documentclass{article}
+
+%-------------------------------------------------------------------------------
+% Packages
+\usepackage{amsmath}
+\usepackage[portuguese]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{minted}
+\usepackage{xcolor}
+
+%-------------------------------------------------------------------------------
+% User-commands
+\newcommand{\todo}[1]{{\color{red}{#1}}}
+
+\newmintedfile{rust}{autogobble, xleftmargin=2em}
+\newcommand{\rustinline}[1]{\mintinline{rust}{#1}}
+
+%-------------------------------------------------------------------------------
+% Project configs
+\title{Relatório de I.A.: Gomoku, Parte 2}
+\author{Cauê Baasch de Souza \\
+        João Paulo Taylor Ienczak Zanette}
+\date{\today}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+    \maketitle{}
+
+    \section{Decisões de Projeto}
+
+    \subsection{Geral}
+
+    O programa foi escrito na linguagem Rust, separado em \todo{X} arquivos:
+
+    \begin{itemize}
+        \item \texttt{ai.rs}: Contém a implementação do \textbf{``Smart Bot''},
+            que é representa a I.A. implementada com o algoritmo do
+            \textit{minimax} com podas \textit{alpha-beta}.
+        \item \texttt{axes.rs}: Contém a implementação de um iterador que itera
+            pelos eixos do tabuleiro.
+        \item \texttt{board.rs}: Contém a implementação do tabuleiro em si.
+        \item \texttt{coordinates.rs}: Contém funções de parsing de coordenadas
+            (para entrada do usuário).
+        \item \texttt{game.rs}: Contém a implementação do jogo em si, com
+            funcionalidades para interagir em uma partida (avançar turnos,
+            simular o jogo até o fim\ldots).
+        \item \texttt{main.rs}: Contém a execução principal do programa, com
+            uma função de heurística para teste e a configuração de um jogo de
+            exemplo.
+        \item \texttt{players.rs}: Contém a implementação de alguns jogadores,
+            como o ``Human'', que joga conforme a entrada do usuário, e o
+            ``Random Bot'', que apenas uma célula aleatória livre.
+        \item \texttt{tests.rs}: Contém os testes unitários para validar
+            algumas implementações feitas, como: validar os algoritmos de
+            detecção de vitória (se não consideram uma sequência de 5
+            elementos, porém em linhas diferentes, como vitória, por exemplo).
+    \end{itemize}
+
+    \subsubsection{O jogo}
+
+    O jogo foi estruturado considerando que fosse possível vincular duas
+    implementações quaisquer de jogadores, desde que implementem uma função
+    \rustinline{decide(self, board, last_move)}, em que \texttt{self} é
+    o próprio jogador, \texttt{board} é o tabuleiro no momento em que o jogador
+    irá decidir sua jogada, e \texttt{last\_move} é a última jogada feita (ou
+    nenhuma, caso seja a primeira jogada). Isso é feito utilizando uma
+    \textit{trait} (semelhante a interface) chamada ``Player'':
+
+    \rustfile[firstline=11, lastline=17]{../src/players.rs}
+
+    A partir disso, o jogo pode ser simulado de três formas: apenas um turno,
+    ``$N$'' turnos ou até o fim (empate ou vitória). A criação de um jogo é
+    dada definindo qual implementação será utilizada para os jogadores 1 e 2,
+    como no exemplo abaixo:
+
+    \rustfile[firstline=53, lastline=55]{../src/main.rs}
+
+    \subsubsection{``Smart Bot'' e o \textit{minimax}}
+
+    Em \texttt{ai.rs} se encontra a implementação da \rustinline{struct
+    SmartBot}, que implementa a \rustinline{trait Player}, fazendo seu
+    \rustinline{decide(...)} chamar a função ``minimax'':
+
+    \rustfile[firstline=96, lastline=98]{../src/ai.rs}
+
+    A função ``minimax'' é subdividida em uma outra função, ``minimax\_aux'',
+    \todo{Mas essa parte o Cauê sabe melhor} \todo{AVANÇA NESSA CAVALA IMUNDA.}
+
+    \subsection{Limitações}
+
+    \todo{AVANÇA NESSA CAVALA IMUNDA.}
+
+    \section{Principais Métodos}
+
+    \todo{Provavelmente vai ficar embutido nos outros tópicos.}
+
+    \subsection{Utilidade e Heurística}
+
+    \todo{Tiz, descreve aqui bonitinho as heurísticas. AVANÇA NESSA CAVALA
+    IMUNDA.}
+
+    \subsection{Outros métodos}
+\end{document}
