@@ -31,11 +31,11 @@
 
     \subsection{Geral}
 
-    O programa foi escrito na linguagem Rust, separado em \todo{X} arquivos:
+    O programa foi escrito na linguagem Rust, separado em 8 arquivos:
 
     \begin{itemize}
         \item \texttt{ai.rs}: Contém a implementação do \textbf{``Smart Bot''},
-            que é representa a I.A. implementada com o algoritmo do
+            que representa a I.A. implementada com o algoritmo do
             \textit{minimax} com podas \textit{alpha-beta}.
         \item \texttt{axes.rs}: Contém a implementação de um iterador que itera
             pelos eixos do tabuleiro.
@@ -50,12 +50,15 @@
             exemplo.
         \item \texttt{players.rs}: Contém a implementação de alguns jogadores,
             como o ``Human'', que joga conforme a entrada do usuário, e o
-            ``Random Bot'', que apenas uma célula aleatória livre.
+            ``Random Bot'', que apenas seleciona uma célula aleatória livre.
         \item \texttt{tests.rs}: Contém os testes unitários para validar
             algumas implementações feitas, como: validar os algoritmos de
             detecção de vitória (se não consideram uma sequência de 5
             elementos, porém em linhas diferentes, como vitória, por exemplo).
     \end{itemize}
+
+    \textit{OBS\@: Em Rust, quando não há ``;'' no último comando de um escopo,
+    então aquele comando é o valor retornado pelo escopo.}
 
     \subsubsection{O jogo}
 
@@ -80,7 +83,7 @@
 
     Em \texttt{ai.rs} se encontra a implementação da \rustinline{struct
     SmartBot}, que implementa a \rustinline{trait Player}, fazendo seu
-    \rustinline{decide(...)} chamar a função ``minimax'':
+    \rustinline{decide(...)} retornar a função ``minimax'':
 
     \rustfile[firstline=96, lastline=98]{../src/ai.rs}
 
@@ -94,8 +97,32 @@
     \section{Principais Métodos}
 
     \todo{Provavelmente vai ficar embutido nos outros tópicos.}
+    \todo{AVANÇA NESSA CAVALA IMUNDA.}
 
     \subsection{Utilidade e Heurística}
+
+    Uma mesma função foi utilizada para Utilidade e Heurística. \todo{O
+    resultado dessa função é apenas a diferença da pontuação do jogador atual
+    com a do oponente para o tabuleiro dado}:
+
+    \rustfile[firstline=25, lastline=25]{../src/main.rs}
+    \begin{minted}{rust}
+        ...
+    \end{minted}
+    \rustfile[firstline=44, lastline=46]{../src/main.rs}
+
+    O cálculo da pontuação para o tabuleiro, dado um jogador, está definido em
+    uma função interna à de heurística, em que, para cada caminho possível nos
+    eixos (todas as horizontais, verticais e diagonais principais e
+    secundárias), conta-se um \textit{streak} (sequência de casas que não
+    estejam sendo ocupadas pelo oponente, limitando a até 5 elementos). Esse
+    \textit{streak} então é elevado a uma constante arbitrária
+    (\rustinline{SCORE_PER_MY_SPACE}). Sendo assim, sequências muito boas de
+    \textit{streaks} geram pontuações muito altas. Quando o tamanho do
+    \textit{streak} é 5, porém, a função imediatamente para retornando o maior
+    número inteiro com sinal possível).
+
+    \rustfile[firstline=26, lastline=42, samepage]{../src/main.rs}
 
     \todo{Tiz, descreve aqui bonitinho as heurísticas. AVANÇA NESSA CAVALA
     IMUNDA.}
