@@ -2,6 +2,8 @@ use board::{Board, Coord};
 use game::PlayerIndicator;
 use players::Player;
 
+use rand;
+
 #[derive(Debug)]
 pub struct SmartBot<F>
 where
@@ -10,6 +12,7 @@ where
     player_id: PlayerIndicator,
     static_evaluator: F,
     recursion_limit: u32,
+    first: bool,
 }
 
 impl<F> SmartBot<F>
@@ -25,6 +28,7 @@ where
             player_id,
             static_evaluator,
             recursion_limit,
+            first: true,
         }
     }
 
@@ -36,6 +40,13 @@ where
         mut beta: isize,
         maximizing: bool,
     ) -> (isize, Option<Coord>) {
+        use rand::Rng;
+        if self.first {
+            self.first = false;
+            let x = board.possible_moves().collect::<Vec<Coord>>();
+            let coord = rand::thread_rng().choose(&x);
+            return (0, coord.map(|x| *x));
+        }
         if depth == 0 || board.possible_moves().next() == None {
             return ((self.static_evaluator)(&board, self.player_id), None);
         }
@@ -84,8 +95,9 @@ where
         let depth = self.recursion_limit;
         let (alpha, beta) = (isize::min_value(), isize::max_value());
 
-        let m = self.minimax_aux(board, depth, alpha, beta, true).1;
-        m.expect("The only winning move is not to play.")
+        self.minimax_aux(board, depth, alpha, beta, true)
+            .1
+            .expect("The only winning move is not to play.")
     }
 }
 

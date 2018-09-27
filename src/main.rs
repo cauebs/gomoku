@@ -23,28 +23,26 @@ use players::{Human, SmartBot};
 use PlayerIndicator::*;
 
 fn heuristic(board: &Board, player: PlayerIndicator) -> isize {
-    const SCORE_PER_MY_SPACE: u32 = 10;
-
     fn score_for_player(board: &Board, player: PlayerIndicator) -> isize {
-        let mut score = 0;
+        let max = Axes::new(&board)
+            .map(|axis| {
+                axis.streaks_with_room(player)
+                    .iter()
+                    .map(|x| x.len())
+                    .max()
+                    .unwrap_or(0) as isize
+            }).max()
+            .unwrap_or(0);
 
-        for axis in Axes::new(&board) {
-            for streak in axis.streaks_with_room(player) {
-                match streak.len() {
-                    2...4 => {
-                        score += streak.len().pow(SCORE_PER_MY_SPACE) as isize;
-                    }
-                    5 => return isize::max_value(),
-                    _ => {}
-                }
-            }
+        if max == 5 {
+            isize::max_value()
+        } else {
+            max
         }
-
-        score
     }
 
-    let opponent = if player == Player1 { Player2 } else { Player1 };
-    score_for_player(&board, player) - score_for_player(&board, opponent)
+    let player_score = score_for_player(&board, player);
+    player_score
 }
 
 fn main() {
